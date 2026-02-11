@@ -2257,7 +2257,7 @@ function setupStockReportListeners() {
     }
 }
 
-//login page
+//login page script
 
 // LOGIN FUNCTION
 // ===== LOGIN =====
