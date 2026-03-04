@@ -6,6 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alat Ganti Komputer</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0ea5e9">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker failed', err));
+            });
+        }
+    </script>
 </head>
 
 <!-- LOADER OVERLAY -->
@@ -636,7 +647,7 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <p>&copy; 2026 Dashboard Alat Ganti Komputer | Sistem Pengurusan Inventori Dan Kewangan</p>
+        <p>&copy; 2026 Dashboard Alat Ganti Komputer | Sistem Pengurusan Inventori Alat Ganti Komputer</p>
     </footer>
     </div>
 

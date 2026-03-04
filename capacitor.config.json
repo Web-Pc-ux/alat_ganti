@@ -1,0 +1,6 @@
+{
+    "appId": "com.alatganti.app",
+    "appName": "Alat Ganti Komputer",
+    "webDir": "www",
+    "bundledWebRuntime": false
+}
