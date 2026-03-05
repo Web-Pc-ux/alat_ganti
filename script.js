@@ -1,4 +1,8 @@
-// Data Store
+// Cloud Configuration (Turbo Engine v5.3 Style)
+const GS_URL = "https://script.google.com/macros/s/AKfycbx0SJ_R7PmUIo4fiA2Nz8kmU2ye49kWYYdElB6yx6TbxnsUHqPbPD0bjvI3sRGWAmVHdw/exec";
+const AUTH_TOKEN = "MASUKKAN_TOKEN_DISINI";
+
+// Data Stores
 let equipment = [];
 let equipmentIdCounter = 1;
 let requests = [];
@@ -6,38 +10,56 @@ let requestIdCounter = 1;
 let budget = 0;
 let budgetUsed = 0;
 let Admin = 0;
-let stok = {};
+let receivedItems = [];
+let receivedIdCounter = 1;
+let syarikatList = [];
+let syarikatIdCounter = 1;
 
-// Load data from localStorage on page load
-window.addEventListener('DOMContentLoaded', () => {
-    // Data Loading
-    loadDataFromStorage();
-    loadComputerData();
+window.addEventListener('load', async () => {
+    // Determine if we are in Dashboard or Login
+    const isDashboard = window.location.pathname.includes('dashboard.html');
 
-    // UI Initialization
-    updateDashboard();
-    Dashboardtest();
-    updateBudgetDisplay();
-    displayRequests();
-    displayEquipmentTable();
-    displayComputerTable();
-    updateRequestJenamaOptions();
-    updateRequestEquipmentOptions();
+    if (isDashboard) {
+        // Load data from Storage (Cache) first to show something while waiting for cloud
+        loadDataFromStorage();
 
-    // Event listeners
-    setupEventListeners();
-    setupEquipmentListeners();
-    setupComputerListeners();
-    setupImportListeners();
-    setupRequestModalListeners();
-    setupStokListeners();
-    setupConfirmationModalListeners();
-    setupReportListeners();
-    setupStockReportListeners();
+        // UI Initialization (Show cached data immediately)
+        updateDashboard();
+        updateBudgetDisplay();
+        displayRequests();
+        displayEquipmentTable();
+        displayComputerTable();
+        displayReceivedTable();
+        displaySyarikatTable();
+        updateRequestJenamaOptions();
+        updateRequestEquipmentOptions();
 
-    // Restore last active section
-    const lastSection = localStorage.getItem('activeSection') || 'dashboard';
-    showSection(lastSection);
+        // Event listeners - Setup BEFORE waiting for cloud
+        setupEventListeners();
+        setupEquipmentListeners();
+        setupComputerListeners();
+        setupImportListeners();
+        setupRequestModalListeners();
+        setupConfirmationModalListeners();
+        setupReportListeners();
+        setupStockReportListeners();
+        setupPenerimaanListeners();
+        setupSyarikatListeners();
+
+        // Restore UI state from URL hash or localStorage
+        let initialSection = window.location.hash.substring(1) || localStorage.getItem('activeSection') || 'dashboard';
+        if (!document.getElementById(initialSection)) {
+            initialSection = 'dashboard';
+        }
+        showSection(initialSection);
+
+        // Start cloud sync in background (NO await)
+        turboLoadAll().then(() => {
+            // Reload UI components that need fresh data after cloud sync finishes
+            updateRequestJenamaOptions();
+            updateRequestEquipmentOptions();
+        });
+    }
 });
 
 // Setup Equipment Listeners
@@ -202,6 +224,7 @@ function handleAddEquipment(e) {
         totalrm: parseFloat(document.getElementById('ETotalRM').value) || 0,
         notaganti: document.getElementById('CatitAlatGanti').value.trim(),
         namamodell: document.getElementById('NamaModel').value,
+        syarikat: document.getElementById('E_Syarikat').value,
         dateAdded: new Date().toLocaleDateString('id-ID')
     };
 
@@ -213,6 +236,7 @@ function handleAddEquipment(e) {
                 ...equipment[itemIndex],
                 ...equipmentData
             };
+            turboSync('update', 'kategori', equipment[itemIndex]);
             showNotification('✓ Peralatan berhasil diubah!', 'success');
         }
     } else {
@@ -222,6 +246,7 @@ function handleAddEquipment(e) {
             ...equipmentData
         };
         equipment.push(newEquipment);
+        turboSync('create', 'kategori', newEquipment);
         showNotification('✓ Selesai!! Peralatan berhasil ditambahkan!', 'success');
     }
 
@@ -439,6 +464,7 @@ function handleAddRequest(e) {
         const idx = requests.findIndex(r => r.id === editingId);
         if (idx > -1) {
             requests[idx] = { ...requests[idx], cust, model, jenama, nosiri, Requestitem, nosiriganti, status, catat, dateend, juruteknik };
+            turboSync('update', 'permohonan', requests[idx]);
             showNotification('✓ Permohonan dikemaskini.', 'success');
         }
     } else { //table permohonan user punya
@@ -458,6 +484,7 @@ function handleAddRequest(e) {
 
         };
         requests.push(newReq);
+        turboSync('create', 'permohonan', newReq);
         showNotification('✓ Permohonan User ditambahkan.', 'success');
     }
 
@@ -491,25 +518,25 @@ function displayRequests() {
     // masih permohonan user
     tbody.innerHTML = requests.map((r, idx) => `
         <tr data-req-id="${r.id}">
-            <td>${idx + 1}</td>
-            <td>${r.cust}</td>
-            <td>${r.model}</td>
-            <td>${r.jenama}</td>
-            <td>${r.nosiri}</td>
-            <td>${r.Requestitem}</td>
-            <td>${r.nosiriganti}</td>
+            <td data-label="No">${idx + 1}</td>
+            <td data-label="Nama">${r.cust}</td>
+            <td data-label="Model">${r.model}</td>
+            <td data-label="Jenama">${r.jenama}</td>
+            <td data-label="No Siri">${r.nosiri}</td>
+            <td data-label="Item">${r.Requestitem}</td>
+            <td data-label="No Siri Ganti">${r.nosiriganti}</td>
 
-            <td>
+            <td data-label="Status">
                 <span class="status-badge ${getStatusClass(r.status)}">
                     ${r.status}
                 </span>
             </td>
 
-            <td>${r.juruteknik}</td>
-            <td>${r.catat}</td>
-            <td>${r.date}</td>
-            <td>${r.dateend}</td>
-            <td>
+            <td data-label="Petugas">${r.juruteknik}</td>
+            <td data-label="Catatan">${r.catat}</td>
+            <td data-label="Tarikh">${r.date}</td>
+            <td data-label="Selesai">${r.dateend}</td>
+            <td data-label="Tindakan">
                 <div class="action-buttons">
                     <button class="btn btn-edit" onclick="promptEditRequest(${r.id})">✏️</button>
                     <button class="btn btn-danger" onclick="deleteRequest(${r.id})">🗑️</button>
@@ -583,40 +610,37 @@ function setupEventListeners() {
             e.preventDefault();
             const sectionId = link.getAttribute('href').substring(1);
             showSection(sectionId);
+
+            // Tutup dropdown apabila page dipilih (klik page tutup balik)
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.remove('expanded');
+                menu.style.maxHeight = null;
+                const toggle = menu.previousElementSibling;
+                if (toggle) toggle.classList.remove('active');
+            });
         });
     });
 
-    // Open Add Item button inside Inventory section
+    // Sidebar Dropdown Nav
+    document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            toggle.classList.toggle('active');
+            const menu = toggle.nextElementSibling;
+            if (menu.classList.contains('expanded')) {
+                menu.classList.remove('expanded');
+                menu.style.maxHeight = null;
+            } else {
+                // Remove existing expanded dropdowns if we want accordion behavior
+                // document.querySelectorAll('.dropdown-menu').forEach(m => { m.classList.remove('expanded'); m.style.maxHeight = null; m.previousElementSibling.classList.remove('active'); });
 
-
-    // Burger menu toggle (mobile)
-    const burgerBtn = document.querySelector('.burger-btn');
-    const burgerList = document.getElementById('burgerList');
-    if (burgerBtn && burgerList) {
-        burgerBtn.addEventListener('click', () => {
-            burgerList.classList.toggle('open');
-            const open = burgerList.classList.contains('open');
-            burgerList.setAttribute('aria-hidden', String(!open));
-        });
-
-        document.querySelectorAll('.burger-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const sectionId = link.getAttribute('href').substring(1);
-                showSection(sectionId);
-                burgerList.classList.remove('open');
-                burgerList.setAttribute('aria-hidden', 'true');
-            });
-        });
-
-        // Close burger if click outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.navbar')) {
-                burgerList.classList.remove('open');
-                burgerList.setAttribute('aria-hidden', 'true');
+                menu.classList.add('expanded');
+                menu.style.maxHeight = menu.scrollHeight + "px";
             }
         });
-    }
+    });
+
+    // Sidebar Navigation - Links are already handled by .nav-link listener above
+    // No extra burger toggle needed for the fixed/bottom sidebar
 }
 
 // Add Item Handler
@@ -668,19 +692,21 @@ function updateDashboard() {
 
 // Show Section Function
 function showSection(sectionId) {
-    // Hide all sections
+    const target = document.getElementById(sectionId);
+    if (!target) return;
+
+    // Hide all sections by removing the active-section class
     document.querySelectorAll('.section').forEach(section => {
-        section.style.display = 'none';
         section.classList.remove('active-section');
+        section.style.display = 'none'; // Keep as fallback/reset
     });
 
     // Show target section
-    const target = document.getElementById(sectionId);
-    if (target) {
-        target.style.display = 'block';
-        setTimeout(() => target.classList.add('active-section'), 10);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    target.style.display = 'block';
+    // Small delay to trigger CSS transitions if added later
+    setTimeout(() => {
+        target.classList.add('active-section');
+    }, 10);
 
     // Update Navigation Active State
     document.querySelectorAll('.nav-link, .burger-link').forEach(link => {
@@ -692,6 +718,9 @@ function showSection(sectionId) {
 
     // Save state
     localStorage.setItem('activeSection', sectionId);
+
+    // Auto-scroll to top when switching
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Dynamically update 'Jenama Komputer' dropdown in Request Form
@@ -1373,90 +1402,373 @@ function getStatusClass(status) {
 // Notification System
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        background-color: ${type === 'success' ? '#2ecc71' : type === 'warning' ? '#f39c12' : '#3498db'};
-        color: white;
-        border-radius: 4px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        z-index: 1000;
-        animation: slideIn 0.3s ease;
+    notification.className = `notification ${type}`;
+
+    // Icon mapping
+    const icons = {
+        success: 'fa-check-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+    };
+
+    notification.innerHTML = `
+        <i class="fas ${icons[type] || icons.info}"></i>
+        <span>${message}</span>
     `;
-    notification.textContent = message;
+
     document.body.appendChild(notification);
 
     setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
+        notification.style.animation = 'slideOutRight 0.4s forwards';
+        setTimeout(() => notification.remove(), 400);
+    }, 4000);
 }
 
-// Local Storage Functions
+// ==========================================
+// Penerimaan Alat Ganti Logic
+// ==========================================
+
+function setupPenerimaanListeners() {
+    const modal = document.getElementById('penerimaanModal');
+    const openBtn = document.getElementById('openAddPenerimaanForm');
+    const closeBtn = document.getElementById('closePenerimaanModal');
+    const closeBtn2 = document.getElementById('closePenerimaanBtn');
+    const form = document.getElementById('addPenerimaanForm');
+    const recvJenis = document.getElementById('recvJenis');
+
+    if (!modal || !form) return;
+
+    if (openBtn) {
+        openBtn.addEventListener('click', () => {
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            form.reset();
+            // Set default date to today
+            document.getElementById('recvDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('penerimaanModalTitle').textContent = '➕ Daftar Penerimaan Alat Ganti';
+            delete form.dataset.editingId;
+            updateRecvItemOptions();
+        });
+    }
+
+    const closeModal = () => {
+        modal.classList.remove('show');
+        document.body.style.overflow = 'auto';
+        form.reset();
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (closeBtn2) closeBtn2.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    // Filter Nama Alat Ganti based on Jenis Model
+    if (recvJenis) {
+        recvJenis.addEventListener('change', () => {
+            updateRecvItemOptions(recvJenis.value);
+        });
+    }
+
+    form.addEventListener('submit', handleAddReceivedEquipment);
+
+    // QR Scan Placeholder
+    const scanBtn = document.getElementById('scanQRBtn');
+    if (scanBtn) {
+        scanBtn.addEventListener('click', () => {
+            const simulatedQR = "QR-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+            document.getElementById('recvSiri').value = simulatedQR;
+            showNotification('📷 QR Scanned: ' + simulatedQR, 'info');
+        });
+    }
+
+    // Import Excel Placeholder
+    const importBtn = document.getElementById('importPenerimaanBtn');
+    if (importBtn) {
+        importBtn.addEventListener('click', () => {
+            showNotification('📥 Sila pilih fail Excel template penerimaan.', 'info');
+        });
+    }
+}
+
+function updateRecvItemOptions(filterJenis = null) {
+    const dropdown = document.getElementById('recvItem');
+    if (!dropdown) return;
+
+    dropdown.innerHTML = '<option value="">-- Pilih Alat Ganti --</option>';
+
+    if (!filterJenis || filterJenis === "") {
+        dropdown.disabled = true;
+        dropdown.style.opacity = "0.5";
+        return;
+    }
+
+    dropdown.disabled = false;
+    dropdown.style.opacity = "1";
+
+    // Tarik data dari table senarai alat ganti (equipment)
+    const filteredEquipment = filterJenis
+        ? equipment.filter(e => e.komp1.toLowerCase() === filterJenis.toLowerCase())
+        : equipment;
+
+    const itemNames = [...new Set(filteredEquipment.map(e => e.category))];
+    itemNames.sort().forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        dropdown.appendChild(option);
+    });
+}
+
+async function handleAddReceivedEquipment(e) {
+    e.preventDefault();
+    const form = document.getElementById('addPenerimaanForm');
+    const editingId = form.dataset.editingId ? parseInt(form.dataset.editingId) : null;
+
+    const data = {
+        vendor: document.getElementById('recvVendor').value.trim(),
+        jenisModel: document.getElementById('recvJenis').value,
+        namaAlatGanti: document.getElementById('recvItem').value,
+        namaModel: document.getElementById('recvModel').value.trim(),
+        noSiri: document.getElementById('recvSiri').value.trim(),
+        tarikhTerima: document.getElementById('recvDate').value,
+        warranty: document.getElementById('recvWarranty').value.trim(),
+        juruteknik: document.getElementById('recvTech').value,
+        status: document.getElementById('recvStatus').value
+    };
+
+    if (editingId) {
+        const idx = receivedItems.findIndex(item => item.id == editingId);
+        if (idx > -1) {
+            receivedItems[idx] = { ...receivedItems[idx], ...data };
+            await turboSync('update', 'penerimaan', receivedItems[idx]);
+            showNotification('✓ Rekod penerimaan dikemaskini.', 'success');
+        }
+    } else {
+        const newItem = {
+            id: receivedIdCounter++,
+            ...data
+        };
+        receivedItems.push(newItem);
+        await turboSync('create', 'penerimaan', newItem);
+        showNotification('✓ Rekod penerimaan berjaya disimpan!', 'success');
+    }
+
+    displayReceivedTable();
+    updateDashboard();
+
+    // Reset form sepenuhnya selepas simpan
+    form.reset();
+    delete form.dataset.editingId;
+    updateRecvItemOptions(); // Pastikan box Alat Ganti disekat semula
+}
+
+function displayReceivedTable() {
+    const tbody = document.getElementById('penerimaanTableBody');
+    if (!tbody) return;
+
+    if (receivedItems.length === 0) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="9" class="text-center">Belum ada rekod penerimaan.</td></tr>';
+        return;
+    }
+
+    // Sort by latest
+    const sorted = [...receivedItems].reverse();
+
+    tbody.innerHTML = sorted.map((item, idx) => {
+        const syarikatObj = syarikatList.find(s => s.namaSyarikat === item.vendor);
+        const vendorDisplay = syarikatObj ? `${syarikatObj.namaSyarikat} (${syarikatObj.umsbenID})` : (item.vendor || '-');
+
+        return `
+        <tr>
+            <td data-label="No">${sorted.length - idx}</td>
+            <td data-label="Syarikat/Vendor"><strong>${vendorDisplay}</strong></td>
+            <td data-label="Jenis">${item.jenisModel}</td>
+            <td data-label="Item">${item.namaAlatGanti}</td>
+            <td data-label="Model">${item.namaModel}</td>
+            <td data-label="No Siri">${item.noSiri || '-'}</td>
+            <td data-label="Tarikh">${item.tarikhTerima}</td>
+            <td data-label="Status">
+                <span class="status-badge ${getStatusClassRecv(item.status)}">
+                    ${item.status}
+                </span>
+            </td>
+            <td data-label="Tindakan">
+                <div class="action-buttons">
+                    <button class="btn btn-edit" onclick="editReceived(${item.id})">✏️</button>
+                    <button class="btn btn-danger" onclick="deleteReceived(${item.id})">🗑️</button>
+                </div>
+            </td>
+        </tr>
+    `;
+    }).join('');
+
+    // Update Dashboard Counts
+    const newItems = receivedItems.filter(i => i.status === 'Belum digunakan').length;
+    const usedItems = receivedItems.filter(i => i.status === 'Telah digunakan').length;
+
+    if (document.getElementById('countNewReceived')) document.getElementById('countNewReceived').textContent = newItems;
+    if (document.getElementById('countUsedReceived')) document.getElementById('countUsedReceived').textContent = usedItems;
+}
+
+function getStatusClassRecv(status) {
+    if (status === 'Belum digunakan') return 'status-baru';
+    if (status === 'Telah digunakan') return 'status-selesai';
+    if (status === 'Rosak') return 'status-ditolak';
+    return '';
+}
+
+window.editReceived = function (id) {
+    const item = receivedItems.find(i => i.id == id);
+    if (!item) return;
+
+    const modal = document.getElementById('penerimaanModal');
+    const form = document.getElementById('addPenerimaanForm');
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+
+    document.getElementById('recvVendor').value = item.vendor;
+    document.getElementById('recvJenis').value = item.jenisModel;
+    updateRecvItemOptions(item.jenisModel);
+    document.getElementById('recvItem').value = item.namaAlatGanti;
+    document.getElementById('recvModel').value = item.namaModel;
+    document.getElementById('recvSiri').value = item.noSiri || '';
+    document.getElementById('recvDate').value = item.tarikhTerima;
+    document.getElementById('recvWarranty').value = item.warranty || '';
+    document.getElementById('recvTech').value = item.juruteknik;
+    document.getElementById('recvStatus').value = item.status;
+
+    form.dataset.editingId = id;
+    document.getElementById('penerimaanModalTitle').textContent = '✏️ Edit Penerimaan';
+};
+
+window.deleteReceived = function (id) {
+    showDeleteConfirmation('Adakah anda pasti mahu memadam rekod penerimaan ini?', async () => {
+        receivedItems = receivedItems.filter(i => i.id != id);
+        await turboSync('delete', 'penerimaan', { id: id });
+        displayReceivedTable();
+        updateDashboard();
+    });
+};
+
 // Local Storage Functions
 function saveDataToStorage() {
-    // Inventory removed
     localStorage.setItem('equipment', JSON.stringify(equipment));
-    localStorage.setItem('equipmentIdCounter', equipmentIdCounter.toString());
     localStorage.setItem('requests', JSON.stringify(requests));
-    localStorage.setItem('requestIdCounter', requestIdCounter.toString());
-    localStorage.setItem('budget', budget.toString());
-    localStorage.setItem('budgetUsed', budgetUsed.toString());
-    localStorage.setItem('stok', JSON.stringify(stok));
+    localStorage.setItem('computerList', JSON.stringify(computerList));
+    localStorage.setItem('receivedItems', JSON.stringify(receivedItems));
+    localStorage.setItem('syarikatList', JSON.stringify(syarikatList));
+    localStorage.setItem('budget', budget);
+    localStorage.setItem('budgetUsed', budgetUsed);
+    localStorage.setItem('requestIdCounter', requestIdCounter);
+    localStorage.setItem('equipmentIdCounter', equipmentIdCounter);
+    if (typeof computerIdCounter !== 'undefined') localStorage.setItem('computerIdCounter', computerIdCounter);
+    if (typeof receivedIdCounter !== 'undefined') localStorage.setItem('receivedIdCounter', receivedIdCounter);
+    if (typeof syarikatIdCounter !== 'undefined') localStorage.setItem('syarikatIdCounter', syarikatIdCounter);
 }
 
 function loadDataFromStorage() {
+    try {
+        equipment = JSON.parse(localStorage.getItem('equipment')) || [];
+        requests = JSON.parse(localStorage.getItem('requests')) || [];
+        computerList = JSON.parse(localStorage.getItem('computerList')) || [];
+        receivedItems = JSON.parse(localStorage.getItem('receivedItems')) || [];
+        syarikatList = JSON.parse(localStorage.getItem('syarikatList')) || [];
+        budget = parseFloat(localStorage.getItem('budget')) || 0;
+        budgetUsed = parseFloat(localStorage.getItem('budgetUsed')) || 0;
+        requestIdCounter = parseInt(localStorage.getItem('requestIdCounter')) || 1;
+        equipmentIdCounter = parseInt(localStorage.getItem('equipmentIdCounter')) || 1;
+        if (localStorage.getItem('computerIdCounter')) computerIdCounter = parseInt(localStorage.getItem('computerIdCounter'));
+        if (localStorage.getItem('receivedIdCounter')) receivedIdCounter = parseInt(localStorage.getItem('receivedIdCounter'));
+        if (localStorage.getItem('syarikatIdCounter')) syarikatIdCounter = parseInt(localStorage.getItem('syarikatIdCounter'));
 
-    const storedEquipment = localStorage.getItem('equipment');
-    const storedEquipmentCounter = localStorage.getItem('equipmentIdCounter');
-
-
-    if (storedEquipment) {
-        equipment = JSON.parse(storedEquipment);
-    }
-    if (storedEquipmentCounter) {
-        equipmentIdCounter = parseInt(storedEquipmentCounter);
-    }
-
-    const storedRequests = localStorage.getItem('requests');
-    const storedRequestCounter = localStorage.getItem('requestIdCounter');
-    if (storedRequests) {
-        try { requests = JSON.parse(storedRequests); } catch (e) { requests = []; }
-    }
-    if (storedRequestCounter) {
-        requestIdCounter = parseInt(storedRequestCounter);
-    }
-
-    const storedBudget = localStorage.getItem('budget');
-    const storedBudgetUsed = localStorage.getItem('budgetUsed');
-    if (storedBudget) budget = parseFloat(storedBudget) || 0;
-    if (storedBudgetUsed) budgetUsed = parseFloat(storedBudgetUsed) || 0;
-
-    const storedStok = localStorage.getItem('stok');
-    if (storedStok) {
-        try { stok = JSON.parse(storedStok); } catch (e) { stok = {}; }
-    }
-
-    // ensure inventory items have used field
-
-
-    // Initialize with sample data if empty
-    if (equipment.length === 0) {
-        initializeSampleData();
+        updateSyarikatDropdowns();
+    } catch (e) {
+        console.error("Gagal memuat cache:", e);
     }
 }
-//DALAM SENARAI ALAT GANTI TABLE
-// Initialize sample equipment data
-function initializeSampleData() {
-    const sampleEquipment = [
+/**
+ * TURBO SYNC ENGINE (Web Side Implementation)
+ * Manages incremental updates to Google Sheets instead of bulk sync
+ */
+async function turboSync(action, sheet, data) {
+    if (!GS_URL) return;
 
-    ];
+    const payload = {
+        token: AUTH_TOKEN,
+        action: action,
+        sheet: sheet,
+        data: data
+    };
 
-    equipment = sampleEquipment;
-    saveDataToStorage();
+    try {
+        // Gunakan 'text/plain' untuk POST supaya dianggap sebagai "simple request"
+        // Ini mengelakkan isu CORS preflight (OPTIONS) yang tidak disokong oleh GAS
+        await fetch(GS_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Tetap gunakan no-cors untuk POST ke GAS
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(payload)
+        });
+
+        console.log(`🚀 TurboSync ${action} pada ${sheet} dihantar ke cloud.`);
+    } catch (err) {
+        console.error(`❌ TurboSync Gagal: ${action} ${sheet}`, err);
+    }
 }
+
+async function turboLoadAll() {
+    if (!GS_URL) return;
+    showNotification('🔄 Menghubungkan ke Turbo Engine...', 'info');
+
+    try {
+        // Untuk GET, kita boleh gunakan mode cors biasa
+        const fullUrl = `${GS_URL}?token=${encodeURIComponent(AUTH_TOKEN)}&action=read&sheet=all`;
+        const response = await fetch(fullUrl);
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            const cloudData = result.data;
+
+            // Map data dari cloud ke variable local
+            if (cloudData.permohonan && cloudData.permohonan.length > 0) {
+                requests = cloudData.permohonan;
+                requestIdCounter = Math.max(...requests.map(r => parseInt(r.id) || 0)) + 1;
+            }
+            if (cloudData.kategori && cloudData.kategori.length > 0) {
+                equipment = cloudData.kategori;
+                equipmentIdCounter = Math.max(...equipment.map(e => parseInt(e.id) || 0)) + 1;
+            }
+            if (cloudData.komputer && cloudData.komputer.length > 0) {
+                computerList = cloudData.komputer;
+                computerIdCounter = Math.max(...computerList.map(c => parseInt(c.id) || 0)) + 1;
+            }
+            if (cloudData.penerimaan && cloudData.penerimaan.length > 0) {
+                receivedItems = cloudData.penerimaan;
+                receivedIdCounter = Math.max(...receivedItems.map(p => parseInt(p.id) || 0)) + 1;
+            }
+            if (cloudData.syarikat && cloudData.syarikat.length > 0) {
+                syarikatList = cloudData.syarikat;
+                syarikatIdCounter = Math.max(...syarikatList.map(s => parseInt(s.id) || 0)) + 1;
+            }
+
+            // Sync cache with cloud data after load
+            saveDataToStorage();
+
+            // Update UI selepas load
+            updateDashboard();
+            displayRequests();
+            displayEquipmentTable();
+            displayComputerTable();
+            displayReceivedTable();
+            displaySyarikatTable();
+
+            showNotification('✅ Data diselaraskan dengan Cloud Turbo.', 'success');
+        }
+    } catch (err) {
+        console.log('TurboLoad status: Offline or partial.');
+    }
+}
+
 
 // Add CSS for animations
 const style = document.createElement('style');
@@ -1502,26 +1814,29 @@ function displayEquipmentTable(filteredEquipment = equipment) {
     updateCategoryFilters();
 
     if (dataToDisplay.length === 0) {
-        tableBody.innerHTML = '<tr class="empty-row"><td colspan="7" class="text-center">Belum ada data peralatan. Tambahkan peralatan baru untuk memulai.</td></tr>';
+        tableBody.innerHTML = '<tr class="empty-row"><td colspan="10" class="text-center">Belum ada data peralatan. Tambahkan peralatan baru untuk memulai.</td></tr>';
         return;
     }
     //Colour Senarai alat ganti table dan susunan table
     tableBody.innerHTML = dataToDisplay.map((item, index) => {
+        const syarikatObj = syarikatList.find(s => s.namaSyarikat === item.syarikat);
+        const syarikatDisplay = syarikatObj ? `${syarikatObj.namaSyarikat} (${syarikatObj.umsbenID})` : (item.syarikat || '-');
+
         const statusClass = item.catit === 'Baru' ? 'status-new' : item.catit === 'Rusak' ? 'status-damage' : 'status-good';
-        const badgeColor = item.quantity <= 10 ? '#f31212ff' : '#2ecc71';  //kuantiti sebenar colour
+        const badgeColor = item.quantity <= 10 ? '#f31212ff' : '#2ecc71';
 
         return `
         <tr data-equipment-id="${item.id}">
-            <td>${index + 1}</td>
-            
-            <td><strong>${item.komp1}</strong></td>
-            <td>${item.category}</td>
-            <td style="text-align: center; font-size: 1.5rem;">${item.namamodell}</td>
-            <td><span class="badge" style="background: ${badgeColor}; color: white; padding: 5px 10px; border-radius: 4px;">${item.quantity}</span></td>
-            <td>RM ${(item.hargaunit || 0).toFixed(2)}</td>
-            <td>RM ${(item.totalrm || 0).toFixed(2)}</td>
-            <td style="text-align: center; font-size: 1.5rem;">${item.notaganti}</td>
-            <td>
+            <td data-label="No">${index + 1}</td>
+            <td data-label="Syarikat/Vendor"><strong>${syarikatDisplay}</strong></td>
+            <td data-label="Model"><strong>${item.komp1}</strong></td>
+            <td data-label="Item">${item.category}</td>
+            <td data-label="Jenama" style="text-align: center;">${item.namamodell}</td>
+            <td data-label="Stok"><span class="badge" style="background: ${badgeColor}; color: white; padding: 5px 10px; border-radius: 4px;">${item.quantity}</span></td>
+            <td data-label="Harga Unit">RM ${(item.hargaunit || 0).toFixed(2)}</td>
+            <td data-label="Jumlah">RM ${(item.totalrm || 0).toFixed(2)}</td>
+            <td data-label="Nota" style="text-align: center;">${item.notaganti}</td>
+            <td data-label="Tindakan">
                 <div class="action-buttons">
                     <button class="btn btn-edit" onclick="editEquipment(${item.id})">✏️ Edit</button>
                     <button class="btn btn-danger" onclick="deleteEquipment(${item.id})">🗑️ Hapus</button>
@@ -1544,6 +1859,7 @@ function editEquipment(equipmentId) {
         document.getElementById('EHargaUnit').value = item.hargaunit || 0;
         document.getElementById('ETotalRM').value = item.totalrm || 0;
         document.getElementById('CatitAlatGanti').value = item.notaganti || '';
+        document.getElementById('E_Syarikat').value = item.syarikat || '';
 
         // Change modal title
         document.getElementById('modalTitle').textContent = '✏️ Edit Peralatan';
@@ -1578,199 +1894,6 @@ function initialize() {
 
 
 
-//----------------------------------------------------------------------
-
-//bahagian contoh kira
-
-function Dashboardtest() {
-    const cardContainer = document.getElementById("stokCards");
-    const tableBody = document.getElementById("stokTable");
-    const totalEl = document.getElementById("jumlahKeseluruhan");
-
-    let total = 0;
-
-
-
-    // buang card item lama (kekalkan card total)
-    if (cardContainer) {
-        cardContainer.querySelectorAll(".item-card").forEach(card => card.remove());
-    }
-    if (tableBody) tableBody.innerHTML = "";
-
-    for (const item in stok) {
-        total += stok[item];
-
-        // CARD ITEM
-        if (cardContainer) {
-            const card = document.createElement("div");
-            card.className = "card item-card";
-            card.innerHTML = `
-          <h3>${item}</h3>
-          <p>${stok[item]}</p>
-          <p>${stok[item]}</p>
-        `;
-            cardContainer.appendChild(card);
-        }
-
-        // TABLE
-        // Use data-stok-item attribute and specific classes for event delegation
-        if (tableBody) {
-            tableBody.innerHTML += `
-          <tr data-stok-item="${item.replace(/"/g, '&quot;')}">
-            <td>${item}</td>
-            <td>${stok[item]}</td>
-            <td>
-                <div class="action-buttons">
-                    <button class="btn btn-edit btn-edit-stok">✏️</button>
-                    <button class="btn btn-danger btn-delete-stok">🗑️</button>
-                </div>
-            </td>
-          </tr>
-        `;
-        }
-    }
-
-    // UPDATE TOTAL
-    totalEl.textContent = total;
-}
-
-// New Event Listener for Stok Actions
-document.addEventListener('click', (e) => {
-    // Edit Stok
-    if (e.target.closest('.btn-edit-stok')) {
-        const button = e.target.closest('.btn-edit-stok');
-        const row = button.closest('tr');
-        const item = row.dataset.stokItem;
-        if (item) editStok(item);
-    }
-    // Delete Stok
-    if (e.target.closest('.btn-delete-stok')) {
-        const button = e.target.closest('.btn-delete-stok');
-        const row = button.closest('tr');
-        const item = row.dataset.stokItem;
-        if (item) deleteStok(item);
-    }
-});
-
-// Edit Stok Function
-window.editStok = function (item) {
-    const qty = stok[item];
-    const form = document.getElementById("tambahstok");
-
-    document.getElementById("item").value = item;
-    document.getElementById("kuantiti").value = qty;
-
-    // Set editing state
-    form.dataset.editingItem = item;
-
-    // Change UI to Edit Mode
-    document.querySelector("#stokForm h2").textContent = "✏️ Edit Stok";
-    const submitBtn = document.querySelector("#tambahstok button[type='submit']");
-    submitBtn.textContent = "Simpan Perubahan"; // Update button text
-    // Store original text
-    if (!submitBtn.dataset.originalText) {
-        submitBtn.dataset.originalText = "💾 Simpan stok";
-    }
-
-    const modal = document.getElementById("stokForm");
-    modal.classList.add("show");
-    document.body.style.overflow = "hidden";
-};
-
-// Delete Stok Function
-window.deleteStok = function (item) {
-    if (confirm(`Adakah anda pasti mahu memadam stok "${item}"?`)) {
-        delete stok[item];
-        saveDataToStorage();
-        Dashboardtest();
-        // showNotification('✓ Stok dipadam.', 'success'); // Optional if notification system is available globally
-    }
-};
-
-function resetStokForm() {
-    const form = document.getElementById("tambahstok");
-    form.reset();
-    delete form.dataset.editingItem;
-
-    document.querySelector("#stokForm h2").textContent = "➕ Tambah Stok";
-    const submitBtn = document.querySelector("#tambahstok button[type='submit']");
-    if (submitBtn.dataset.originalText) {
-        submitBtn.textContent = submitBtn.dataset.originalText;
-    } else {
-        submitBtn.textContent = "💾 Simpan stok";
-    }
-
-    const modal = document.getElementById("stokForm");
-    modal.classList.remove("show");
-    modal.style.display = ""; // ensuring clean state
-    document.body.style.overflow = "auto";
-}
-
-
-function setupStokListeners() {
-    // BUKA MODAL
-    const openBtn = document.getElementById("openRequestForm1");
-    if (openBtn) {
-        openBtn.addEventListener("click", () => {
-            const modal = document.getElementById("stokForm");
-            modal.classList.add("show");
-            document.body.style.overflow = "hidden";
-        });
-    }
-
-    // TUTUP MODAL
-    const closeBtn = document.getElementById("closeRequestModal1");
-    if (closeBtn) {
-        closeBtn.addEventListener("click", () => {
-            resetStokForm();
-        });
-    }
-
-    const cancelBtn = document.getElementById("cancelRequestBtn1");
-    if (cancelBtn) {
-        cancelBtn.addEventListener("click", () => {
-            resetStokForm();
-        });
-    }
-
-    // submit form tambah stok
-    const form = document.getElementById("tambahstok");
-    if (form) {
-        form.addEventListener("submit", function (e) {
-            e.preventDefault();
-
-            const itemInput = document.getElementById("item");
-            const qtyInput = document.getElementById("kuantiti");
-            const item = itemInput.value.trim();
-            const qty = parseInt(qtyInput.value);
-
-            if (!item || isNaN(qty)) {
-                alert("Sila isi semua maklumat dengan betul.");
-                return;
-            }
-
-            const editingItem = this.dataset.editingItem;
-
-            if (editingItem) {
-                // EDIT MODE
-                if (editingItem !== item) {
-                    delete stok[editingItem];
-                }
-                stok[item] = qty;
-            } else {
-                // ADD MODE
-                if (!stok[item]) stok[item] = 0;
-                stok[item] += qty;
-            }
-
-            saveDataToStorage();
-            Dashboardtest();
-            resetStokForm();
-        });
-    }
-}
-
-//end of kira
 
 // ----------------------------------------------------------------------------
 // SENARAI KOMPUTER LOGIC (NEW SECTION)
@@ -1780,21 +1903,11 @@ let computerList = [];
 let computerIdCounter = 1;
 
 function loadComputerData() {
-    const storedComputers = localStorage.getItem('computer_list');
-    const storedCounter = localStorage.getItem('computerIdCounter');
-
-    if (storedComputers) {
-        try { computerList = JSON.parse(storedComputers); } catch (e) { computerList = []; }
-    }
-
-    if (storedCounter) {
-        computerIdCounter = parseInt(storedCounter);
-    }
+    loadDataFromStorage();
 }
 
 function saveComputerData() {
-    localStorage.setItem('computer_list', JSON.stringify(computerList));
-    localStorage.setItem('computerIdCounter', computerIdCounter.toString());
+    saveDataToStorage();
 }
 
 function displayComputerTable() {
@@ -1809,10 +1922,10 @@ function displayComputerTable() {
     tableBody.innerHTML = computerList.map((item, index) => {
         return `
         <tr data-computer-id="${item.id}">
-            <td>${index + 1}</td>
-            <td><strong>${item.modelType}</strong></td>
-            <td>${item.brandModel}</td>
-            <td>
+            <td data-label="No">${index + 1}</td>
+            <td data-label="Model"><strong>${item.modelType}</strong></td>
+            <td data-label="Jenama & Model">${item.brandModel}</td>
+            <td data-label="Tindakan">
                 <div class="action-buttons">
                     <button class="btn btn-edit" onclick="editComputer(${item.id})">✏️ Edit</button>
                     <button class="btn btn-danger" onclick="deleteComputer(${item.id})">🗑️ Hapus</button>
@@ -1879,6 +1992,7 @@ function handleAddComputer(e) {
         if (index !== -1) {
             computerList[index].modelType = modelType;
             computerList[index].brandModel = brandModel;
+            turboSync('update', 'komputer', computerList[index]);
             // showNotification('Data komputer dikemaskini', 'success');
         }
     } else {
@@ -1890,6 +2004,7 @@ function handleAddComputer(e) {
             dateAdded: new Date().toISOString()
         };
         computerList.push(newItem);
+        turboSync('create', 'komputer', newItem);
         // showNotification('Komputer baru ditambah', 'success');
     }
 
@@ -1922,38 +2037,43 @@ window.editComputer = function (id) {
     }
 };
 
-// Custom Delete Confirmation Modal Logic
-let deleteCallback = null;
-
+// ===== PREMIUM CONFIRMATION MODAL =====
 window.showDeleteConfirmation = function (message, onConfirm) {
-    const modal = document.getElementById('confirmationModal');
-    const msgElement = document.getElementById('confirmationMessage');
-    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    document.body.appendChild(overlay);
 
-    if (modal && msgElement && confirmBtn) {
-        msgElement.textContent = message;
-        deleteCallback = onConfirm;
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'confirm-modal';
+    modal.innerHTML = `
+        <i class="fas fa-exclamation-circle"></i>
+        <p>${message}</p>
+        <div class="modal-actions">
+            <button id="cancelConfBtn" class="btn btn-secondary">Batal</button>
+            <button id="confirmConfBtn" class="btn btn-primary" style="background: var(--danger); box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.4);">Hapus</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
 
-        // Clean up previous event listeners (simple approach)
-        const newConfirmBtn = confirmBtn.cloneNode(true);
-        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    const close = () => {
+        modal.remove();
+        overlay.remove();
+    };
 
-        newConfirmBtn.addEventListener('click', () => {
-            if (deleteCallback) deleteCallback();
-            closeConfirmationModal();
-        });
-
-        modal.classList.add('show');
-    } else {
-        // Fallback if modal elements missing
-        if (confirm(message)) onConfirm();
-    }
+    document.getElementById('cancelConfBtn').onclick = close;
+    overlay.onclick = close;
+    document.getElementById('confirmConfBtn').onclick = () => {
+        onConfirm();
+        close();
+    };
 };
 
 window.closeConfirmationModal = function () {
-    const modal = document.getElementById('confirmationModal');
-    if (modal) modal.classList.remove('show');
-    deleteCallback = null;
+    // No longer needed as handled by closure, but keep for compatibility if called elsewhere
+    const modals = document.querySelectorAll('.confirm-modal, .modal-overlay');
+    modals.forEach(m => m.remove());
 };
 
 // Update Delete Functions to use Custom Modal
@@ -1961,25 +2081,20 @@ window.closeConfirmationModal = function () {
 window.deleteComputer = function (id) {
     showDeleteConfirmation('Adakah anda pasti mahu memadam komputer ini?', () => {
         computerList = computerList.filter(c => c.id !== id);
+        turboSync('delete', 'komputer', { id: id });
         saveComputerData();
         displayComputerTable();
         updateRequestJenamaOptions();
     });
 };
 
-window.deleteStok = function (item) {
-    showDeleteConfirmation(`Adakah anda pasti mahu memadam stok "${item}"?`, () => {
-        delete stok[item];
-        saveDataToStorage();
-        Dashboardtest();
-    });
-};
 
 window.deleteEquipment = function (id) {
     const item = equipment.find(e => e.id == id);
     const komp1 = item ? item.komp1 : 'item ini';
     showDeleteConfirmation(`Adakah anda pasti mahu memadam "${komp1}"?`, () => {
         equipment = equipment.filter(e => e.id !== id);
+        turboSync('delete', 'kategori', { id: id });
         saveDataToStorage();
         displayEquipmentTable();
         updateRequestEquipmentOptions();
@@ -1989,6 +2104,7 @@ window.deleteEquipment = function (id) {
 window.deleteRequest = function (id) {
     showDeleteConfirmation('Adakah anda pasti mahu memadam permohonan ini?', () => {
         requests = requests.filter(r => r.id !== id);
+        turboSync('delete', 'permohonan', { id: id });
         saveDataToStorage();
         displayRequests();
     });
@@ -2259,64 +2375,17 @@ function setupStockReportListeners() {
 
 //login page script
 
-// LOGIN FUNCTION
-// ===== LOGIN =====
-// ===== LOGIN =====
-const loginForm = document.getElementById('loginForm');
-const loadingOverlay = document.getElementById('loadingOverlay');
+// LOGIN handled by Firebase in index.html
 
-function showLoader() {
-    loadingOverlay.style.display = 'flex';
-}
-
-function hideLoader() {
-    loadingOverlay.style.display = 'none';
-}
-
-if (loginForm) {
-    loginForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        showLoader();
-
-        setTimeout(() => {
-            hideLoader();
-
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-
-            // Ambil user dari localStorage
-            fetch("data/users.json")
-                .then(res => res.json())
-                .then(users => {
-
-                    const foundUser = users.find(
-                        u => u.id === username && u.password === password
-                    );
-
-                    if (!foundUser) {
-                        alert("❌ Username atau password salah!");
-                        return;
-                    }
-
-                    // SIMPAN SESSION (kekalkan logic anda)
-                    sessionStorage.setItem("loggedIn", "true");
-                    sessionStorage.setItem("currentUser", JSON.stringify(foundUser));
-
-                    window.location.href = "dashboard.html";
-                })
-                .catch(() => {
-                    alert("❌ Gagal load data user");
-                });
-
-
-        }, 1500);
-    });
-}
 
 // ===== SESSION CHECK =====
 if (window.location.pathname.endsWith("dashboard.html")) {
     if (sessionStorage.getItem("loggedIn") !== "true") {
-        window.location.href = "index.html";
+        if (window.location.pathname.includes("/Dashboard/")) {
+            window.location.href = "../index.html";
+        } else {
+            window.location.href = "index.html";
+        }
     }
 }
 
@@ -2325,183 +2394,270 @@ let timeoutReminder, autoLogout;
 const timeoutLimit = 10 * 60 * 1000; // 10 minit
 const reminderTime = 9 * 60 * 1000;  // 1 minit sebelum logout
 
-// Popup reminder
+// Popup reminder toast
 const timeoutReminderDiv = document.createElement('div');
-timeoutReminderDiv.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(26,188,156,0.95);color:#fff;padding:18px 25px;border-radius:12px;font-weight:700;box-shadow:0 0 15px #1abc9c,0 0 25px rgba(26,188,156,0.5);text-align:center;display:none;z-index:9999;';
-timeoutReminderDiv.innerHTML = '⚠️ Anda akan logout dalam 1 minit kerana tiada aktiviti! <button id="stayLoggedIn" style="margin-top:10px;padding:8px 16px;border:none;border-radius:10px;background:#3498db;color:#fff;cursor:pointer;box-shadow:0 5px 15px rgba(0,0,0,0.4);">Terus Login</button>';
+timeoutReminderDiv.className = 'timeout-toast';
+timeoutReminderDiv.style.display = 'none';
+timeoutReminderDiv.innerHTML = `
+    <i class="fas fa-clock"></i>
+    <span>Sesi anda akan berakhir dalam 1 minit kerana tiada aktiviti.</span>
+    <button id="stayLoggedIn" class="btn-stay">Kekal Log Masuk</button>
+`;
 document.body.appendChild(timeoutReminderDiv);
-const stayBtn = document.getElementById('stayLoggedIn');
 
 function resetIdleTimer() {
-    clearTimeout(timeoutReminder); clearTimeout(autoLogout);
+    clearTimeout(timeoutReminder);
+    clearTimeout(autoLogout);
     timeoutReminderDiv.style.display = 'none';
     startIdleTimer();
 }
 
 function startIdleTimer() {
-    timeoutReminder = setTimeout(() => { timeoutReminderDiv.style.display = 'block'; }, reminderTime);
-    autoLogout = setTimeout(() => { sessionStorage.removeItem("loggedIn"); window.location.href = "index.html"; }, timeoutLimit);
+    timeoutReminder = setTimeout(() => {
+        timeoutReminderDiv.style.display = 'flex';
+    }, reminderTime);
+
+    autoLogout = setTimeout(() => {
+        sessionStorage.removeItem("loggedIn");
+        const loginUrl = window.location.pathname.includes("/Dashboard/") ? "../index.html" : "index.html";
+        window.location.href = loginUrl;
+    }, timeoutLimit);
 }
 
-['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => { document.addEventListener(evt, resetIdleTimer, false); });
-stayBtn.addEventListener('click', () => { timeoutReminderDiv.style.display = 'none'; resetIdleTimer(); });
-startIdleTimer();
-
-// ===== BURGER MENU LOGOUT CONFIRM =====
-const logoutBtn = document.getElementById('logoutBtn');
-
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', e => {
-        e.preventDefault();
-        e.stopPropagation(); // ⬅️ INI FIX UTAMA
-        // Simpan last section / scroll
-        const dashboardState = {
-            scrollY: window.scrollY,
-            lastSection: window.location.hash || '#dashboard'
-        };
-        localStorage.setItem('dashboardState', JSON.stringify(dashboardState));
-
-        // Tambah overlay
-        let overlayDiv = document.createElement('div');
-        overlayDiv.id = "logoutOverlay";
-        overlayDiv.style.display = 'block';
-        document.body.appendChild(overlayDiv);
-
-        // Buat popup confirm logout
-        let confirmDiv = document.createElement('div');
-        confirmDiv.id = "confirmLogoutDiv";
-        confirmDiv.style.cssText = `
-      position:fixed;top:50%;left:50%;
-      transform:translate(-50%,-50%);
-      background:rgba(44,62,80,0.95);
-      color:#fff;
-      padding:25px 35px;
-      border-radius:15px;
-      box-shadow:0 0 20px #3498db,0 0 35px rgba(52,152,219,0.5);
-      text-align:center;
-      z-index:9999;
-    `;
-        confirmDiv.innerHTML = `
-      <p>⚠️ Anda pasti mahu logout?</p>
-      <div style="margin-top:20px;display:flex;justify-content:space-around;gap:15px;">
-        <button id="cancelLogoutBtn" style="
-          padding:10px 20px;
-          border:none;
-          border-radius:12px;
-          background:#7f8c8d;
-          color:#fff;
-          font-weight:bold;
-          cursor:pointer;
-          box-shadow:0 6px 15px rgba(0,0,0,0.4);
-        ">Batal</button>
-        <button id="confirmLogoutBtn" style="
-          padding:10px 20px;
-          border:none;
-          border-radius:12px;
-          background:#e74c3c;
-          color:#fff;
-          font-weight:bold;
-          cursor:pointer;
-          box-shadow:0 6px 15px rgba(0,0,0,0.4),0 0 15px #e74c3c;
-        ">Logout</button>
-      </div>
-    `;
-        document.body.appendChild(confirmDiv);
-
-        const cancelBtn = document.getElementById('cancelLogoutBtn');
-        const confirmBtn = document.getElementById('confirmLogoutBtn');
-
-        // Cancel → remove popup & overlay, restore last section
-        cancelBtn.addEventListener('click', () => {
-            confirmDiv.remove();
-            overlayDiv.remove(); // hilangkan kabur
-            const savedState = JSON.parse(localStorage.getItem('dashboardState'));
-            if (savedState) {
-                window.scrollTo({ top: savedState.scrollY, behavior: 'smooth' });
-                if (savedState.lastSection) {
-                    const sectionEl = document.querySelector(savedState.lastSection);
-                    if (sectionEl) sectionEl.scrollIntoView({ behavior: 'smooth' });
-                }
-            }
-        });
-
-        // Confirm → logout
-        confirmDiv.addEventListener('click', (e) => {
-            if (e.target && e.target.id === 'confirmLogoutBtn') {
-                sessionStorage.removeItem("loggedIn");
-                window.location.href = "index.html";
-
-
-            }
-        });
-    });
-}
-
-let users = JSON.parse(localStorage.getItem("users")) || [];
-
-function renderUsers() {
-    const table = document.getElementById("userTable");
-    if (!table) return;
-
-    table.innerHTML = "";
-
-    users.forEach((u, index) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${u.name || "-"}</td>
-            <td>${u.id}</td>
-            <td>${u.role}</td>
-            <td>
-                <button class="admin-delete" data-index="${index}">Padam</button>
-            </td>
-        `;
-        table.appendChild(tr);
-    });
-}
-
-renderUsers();
-
-const addUserForm = document.getElementById("addUserForm");
-
-if (addUserForm) {
-    addUserForm.addEventListener("submit", e => {
-        e.preventDefault();
-
-        const name = document.getElementById("name").value;
-        const email = document.getElementById("email").value;
-        const role = document.getElementById("role").value;
-        const password = document.getElementById("password").value;
-
-        if (users.some(u => u.id === email)) {
-            alert("User sudah wujud");
-            return;
-        }
-
-        users.push({
-            name,
-            id: email,
-            password,
-            role
-        });
-
-        localStorage.setItem("users", JSON.stringify(users));
-        e.target.reset();
-        renderUsers();
-    });
-}
-
-document.addEventListener("click", e => {
-    if (e.target.classList.contains("admin-delete")) {
-        const index = e.target.dataset.index;
-        if (!confirm("Padam user ini?")) return;
-
-        users.splice(index, 1);
-        localStorage.setItem("users", JSON.stringify(users));
-        renderUsers();
-    }
+['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, resetIdleTimer, false);
 });
 
+const stayBtn = document.getElementById('stayLoggedIn');
+if (stayBtn) {
+    stayBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        timeoutReminderDiv.style.display = 'none';
+        resetIdleTimer();
+    });
+}
+startIdleTimer();
+
+// ===== LOGOUT CONFIRMATION =====
+const handleLogout = (e) => {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Create Overlay
+    const overlayDiv = document.createElement('div');
+    overlayDiv.className = 'modal-overlay';
+    document.body.appendChild(overlayDiv);
+
+    // Create Confirm Modal
+    const confirmDiv = document.createElement('div');
+    confirmDiv.className = 'confirm-modal';
+    confirmDiv.innerHTML = `
+        <i class="fas fa-sign-out-alt"></i>
+        <p>Adakah anda pasti mahu menamatkan sesi ini?</p>
+        <div class="modal-actions">
+            <button id="cancelLogoutBtn" class="btn btn-secondary">Batal</button>
+            <button id="confirmLogoutBtn" class="btn btn-primary" style="background: var(--danger); box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.4);">Log Keluar</button>
+        </div>
+    `;
+    document.body.appendChild(confirmDiv);
+
+    const closeModal = () => {
+        confirmDiv.remove();
+        overlayDiv.remove();
+    };
+
+    const cancelBtn = document.getElementById('cancelLogoutBtn');
+    const confirmBtn = document.getElementById('confirmLogoutBtn');
+
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    if (overlayDiv) overlayDiv.addEventListener('click', closeModal);
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', () => {
+            sessionStorage.removeItem("loggedIn");
+            const loginUrl = window.location.pathname.includes("/Dashboard/") ? "../index.html" : "index.html";
+            window.location.href = loginUrl;
+        });
+    }
+};
+
+const logoutBtn = document.getElementById('logoutBtn');
+const logoutBtnHeader = document.getElementById('logoutBtnHeader');
+
+if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+if (logoutBtnHeader) logoutBtnHeader.addEventListener('click', handleLogout);
 
 
+// ==========================================
+// SYARIKAT / VENDOR MANAGEMENT
+// ==========================================
 
+function setupSyarikatListeners() {
+    const modal = document.getElementById('syarikatModal');
+    const openBtn = document.getElementById('openAddSyarikatForm');
+    const closeBtn = document.getElementById('closeSyarikatModal');
+    const cancelBtn = document.getElementById('cancelSyarikatBtn');
+    const form = document.getElementById('syarikatForm');
 
+    if (!modal || !form) return;
+
+    if (openBtn) {
+        openBtn.addEventListener('click', () => {
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            form.reset();
+            document.getElementById('syarikatModalTitle').textContent = '➕ Daftar Syarikat Baru';
+            delete form.dataset.editingId;
+        });
+    }
+
+    const closeModal = () => {
+        modal.classList.remove('show');
+        document.body.style.overflow = 'auto';
+        form.reset();
+        delete form.dataset.editingId;
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    form.addEventListener('submit', handleSyarikatForm);
+}
+
+function handleSyarikatForm(e) {
+    e.preventDefault();
+    const form = e.target;
+    const editingId = form.dataset.editingId ? parseInt(form.dataset.editingId) : null;
+
+    const data = {
+        umsbenID: document.getElementById('syarikatID').value.trim(),
+        namaSyarikat: document.getElementById('syarikatNama').value.trim(),
+        namaPemilik: document.getElementById('syarikatPemilik').value.trim(),
+        status: document.getElementById('syarikatStatus').value,
+        tarikhMula: document.getElementById('syarikatMula').value,
+        tarikhAkhir: document.getElementById('syarikatAkhir').value,
+        bajet: parseFloat(document.getElementById('syarikatBajet').value) || 0
+    };
+
+    if (editingId) {
+        // Edit Mode
+        const idx = syarikatList.findIndex(s => s.id === editingId);
+        if (idx > -1) {
+            syarikatList[idx] = { ...syarikatList[idx], ...data };
+            turboSync('update', 'syarikat', syarikatList[idx]);
+            showNotification('✓ Maklumat syarikat dikemaskini.', 'success');
+        }
+    } else {
+        // Add Mode
+        const newItem = {
+            id: syarikatIdCounter++,
+            ...data
+        };
+        syarikatList.push(newItem);
+        turboSync('create', 'syarikat', newItem);
+        showNotification('✓ Syarikat berjaya didaftarkan!', 'success');
+    }
+
+    saveDataToStorage();
+    displaySyarikatTable();
+    updateSyarikatDropdowns();
+
+    // Close modal
+    const modal = document.getElementById('syarikatModal');
+    modal.classList.remove('show');
+    document.body.style.overflow = 'auto';
+    form.reset();
+    delete form.dataset.editingId;
+}
+
+function displaySyarikatTable() {
+    const tbody = document.getElementById('syarikatTableBody');
+    if (!tbody) return;
+
+    if (syarikatList.length === 0) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="8" class="text-center">Belum ada data syarikat.</td></tr>';
+        return;
+    }
+
+    // Sort by name
+    const sorted = [...syarikatList].sort((a, b) => a.namaSyarikat.localeCompare(b.namaSyarikat));
+
+    tbody.innerHTML = sorted.map((item, idx) => `
+        <tr>
+            <td data-label="No">${idx + 1}</td>
+            <td data-label="ID UMSBEN">${item.umsbenID}</td>
+            <td data-label="Syarikat"><strong>${item.namaSyarikat}</strong></td>
+            <td data-label="Pemilik">${item.namaPemilik}</td>
+            <td data-label="Kontrak">${item.tarikhMula} - ${item.tarikhAkhir}</td>
+            <td data-label="Status">
+                <span class="status-badge ${item.status === 'Aktif' ? 'status-selesai' : 'status-ditolak'}">
+                    ${item.status}
+                </span>
+            </td>
+            <td data-label="Bajet">RM ${item.bajet.toLocaleString('ms-MY', { minimumFractionDigits: 2 })}</td>
+            <td data-label="Tindakan">
+                <div class="action-buttons">
+                    <button class="btn btn-edit" onclick="editSyarikat(${item.id})">✏️</button>
+                    <button class="btn btn-danger" onclick="deleteSyarikat(${item.id})">🗑️</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+window.editSyarikat = function (id) {
+    const item = syarikatList.find(s => s.id === id);
+    if (!item) return;
+
+    const modal = document.getElementById('syarikatModal');
+    const form = document.getElementById('syarikatForm');
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+
+    document.getElementById('syarikatID').value = item.umsbenID;
+    document.getElementById('syarikatNama').value = item.namaSyarikat;
+    document.getElementById('syarikatPemilik').value = item.namaPemilik;
+    document.getElementById('syarikatStatus').value = item.status;
+    document.getElementById('syarikatMula').value = item.tarikhMula;
+    document.getElementById('syarikatAkhir').value = item.tarikhAkhir;
+    document.getElementById('syarikatBajet').value = item.bajet;
+
+    form.dataset.editingId = id;
+    document.getElementById('syarikatModalTitle').textContent = '✏️ Edit Maklumat Syarikat';
+};
+
+window.deleteSyarikat = function (id) {
+    const item = syarikatList.find(s => s.id === id);
+    if (!item) return;
+
+    showDeleteConfirmation(`Adakah anda pasti mahu memadam "${item.namaSyarikat}"?`, () => {
+        syarikatList = syarikatList.filter(s => s.id !== id);
+        turboSync('delete', 'syarikat', { id: id });
+        saveDataToStorage();
+        displaySyarikatTable();
+    });
+};
+
+function updateSyarikatDropdowns() {
+    const dropdowns = ['E_Syarikat', 'recvVendor'];
+    dropdowns.forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">-- Pilih Syarikat --</option>';
+
+        syarikatList.forEach(s => {
+            const option = document.createElement('option');
+            option.value = s.namaSyarikat;
+            option.textContent = `${s.namaSyarikat} (${s.umsbenID})`;
+            select.appendChild(option);
+        });
+
+        if (currentValue) select.value = currentValue;
+    });
+}

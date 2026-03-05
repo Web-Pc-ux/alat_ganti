@@ -4,19 +4,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login Futuristik</title>
+  <title>Sistem Alat Ganti | Login Premium</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style-Login.css">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0ea5e9">
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('Service Worker registered'))
-          .catch(err => console.log('Service Worker failed', err));
-      });
-    }
-  </script>
+  <link rel="icon" type="image/png" href="favicon.png">
+
 </head>
 
 <body>
@@ -27,18 +21,18 @@
   </div>
 
   <div class="login-container-premium">
-    <h1 class="title-3d">Selamat Datang</h1>
-    <p class="subtitle">Sila log masuk untuk meneruskan</p>
+    <h1 class="title-3d">Akses Sistem</h1>
+    <p class="subtitle">Log masuk ke Portal Pengurusan Alat Ganti</p>
     <form id="loginForm">
       <div class="form-group">
-        <input type="text" id="username" required placeholder="Username / Email" class="input-3d-glow">
+        <input type="text" id="username" required placeholder="✉️ Username / Email" class="input-3d-glow">
       </div>
       <div class="form-group">
-        <input type="password" id="password" required placeholder="Password" class="input-3d-glow">
+        <input type="password" id="password" required placeholder="🔒 Password" class="input-3d-glow">
       </div>
-      <button type="submit" class="button-3d-glow">Log Masuk</button>
+      <button type="submit" class="button-3d-glow">Log Masuk <i class="fas fa-sign-in-alt"></i></button>
     </form>
-    <p class="note">© 2026 Sistem Alat Ganti Komputer</p>
+    <p class="note">© 2026 Admin Panel | Premium Experience</p>
   </div>
 
   <script src="script.js"></script>
@@ -105,7 +99,7 @@
         }));
 
         alert(`✅ Selamat datang, ${userData.name}`);
-        window.location.href = "dashboard.html";
+        window.location.href = "Dashboard/dashboard.html";
 
       } catch (err) {
         console.error("Login error:", err);

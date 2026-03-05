@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Alat Ganti Komputer | Premium Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="../favicon.png">
+
+</head>
+
+<!-- LOADER OVERLAY -->
+<div id="loadingOverlay">
+    <span class="loader"></span>
+</div>
+
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo"><i class="fas fa-microchip"></i> <span>ALAT GANTI</span></div>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#dashboard" class="nav-link active"><i class="fas fa-th-large"></i>
+                        <span>Dashboard</span></a></li>
+                <li><a href="#requests" class="nav-link"><i class="fas fa-tasks"></i> <span>Permohonan</span></a></li>
+
+                <!-- DROPDOWN INVENTORI -->
+                <li class="nav-item-dropdown">
+                    <div class="dropdown-toggle" id="inventoryToggle">
+                        <i class="fas fa-boxes"></i> <span>Inventori</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </div>
+                    <ul class="dropdown-menu" id="inventoryMenu">
+                        <li><a href="#equipment-list" class="nav-link"><i class="fas fa-layer-group"></i> <span>Stok
+                                    Item</span></a></li>
+                        <li><a href="#equipment-listPC" class="nav-link"><i class="fas fa-desktop"></i> <span>Senarai
+                                    PC</span></a></li>
+                        <li><a href="#penerimaan" class="nav-link"><i class="fas fa-cart-arrow-down"></i>
+                                <span>Penerimaan</span></a></li>
+                    </ul>
+                </li>
+
+                <li><a href="#syarikat" class="nav-link"><i class="fas fa-building"></i> <span>Syarikat</span></a></li>
+                <li><a href="#budget" class="nav-link"><i class="fas fa-chart-pie"></i> <span>Laporan Stok</span></a>
+                </li>
+                <li><a href="#adminSection" class="nav-link"><i class="fas fa-user-shield"></i> <span>Admin
+                            Panel</span></a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> <span>Log
+                        Keluar</span></button>
+            </div>
+        </aside>
+
+        <div class="main-content-wrapper">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-content">
+                    <h1>Sistem Urus Alat Ganti</h1>
+                    <p class="subtitle">Pengurusan inventori dan perantaraan vendor secara profesional</p>
+                </div>
+                <!-- Mobile Logout Pill -->
+                <div class="header-actions">
+                    <button id="logoutBtnHeader" class="logout-pill">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Keluar</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="section">
+                    <h2>DASHBOARD PERMOHONAN USER</h2> <!-- Dashboard yang Connected ke Form Permohonan ---->
+
+                    <!-- Ringkasan Statistik -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-file-invoice"></i></div>
+                            <div class="stat-content">
+                                <span class="stat-label">Permohonan Baru</span>
+                                <p class="stat-value" id="reqNew">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-spinner fa-spin"></i></div>
+                            <div class="stat-content">
+                                <span class="stat-label">Dalam Proses</span>
+                                <p class="stat-value" id="reqInProgress">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-content">
+                                <span class="stat-label">Selesai</span>
+                                <p class="stat-value" id="reqDone">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+                            <div class="stat-content">
+                                <span class="stat-label">Ditolak</span>
+                                <p class="stat-value" id="reqRejected">0</p>
+                            </div>
+                        </div>
+                    </div> <!-- End statistik ringkasan -->
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-desktop"></i></div>
+                            <div class="stat-content">
+                                <span class="stat-label">Total Komputer</span>
+                                <p class="stat-value" id="totalComputers">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-pc-tower-peripheral"></i></div>
+                            <div class="stat-content">
+                                <span class="stat-label">Desktop</span>
+                                <p class="stat-value" id="totalDesktops">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-laptop"></i></div>
+                            <div class="stat-content">
+                                <span class="stat-label">Laptop</span>
+                                <p class="stat-value" id="totalLaptops">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2>Senarai Alat Ganti</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: #e67e22;">🔧</div>
+                            <div class="stat-content">
+                                <h3>Jumlah Keseluruhan</h3>
+                                <p class="stat-value" id="totalEquipment">0</p>
+                                <span class="stat-label">Total Unit Alat Ganti</span>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </section>
+
+                <!----------------------------------------------------------------------------- -->
+                <!-------------------- BAHAGIAN PERMOHONAN ALAT GANTI (USER) --------------------->
+                <!------------------------AKAN DIPAPARKAN PADA DASHBOARD PERMOHONAN USER--------->
+                <!----------------------------------------------------------------------------- -->
+                <section id="requests" class="section">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                        <div>
+                            <h2>📨 Permohonan Alat Ganti (User)</h2>
+                            <p style="color:#7f8c8d;margin-bottom:0;">Senarai permohonan daripada user. Admin boleh
+                                tambah /
+                                edit / padam.</p>
+                        </div>
+                        <div class="action-buttons-top">
+                            <button class="btn btn-secondary" id="generateReportBtn">🖨️ Laporan (A4)</button>
+                            <button class="btn btn-primary" id="openRequestForm">➕ Tambah Permohonan</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="inventory-table" id="requestsTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nama Pengadu</th>
+                                    <th>Model Komputer</th> <!--Cth : Desktop / Laptop-->
+                                    <th>Jenama Komputer</th> <!--Cth : Dell Optiplex 9020-->
+                                    <th>No Siri</th>
+                                    <th>Item Diminta</th> <!--Cth : Motherboard-->
+                                    <th>No Siri Alat Ganti</th>
+                                    <th>Status</th> <!--Auto : Baru-->
+                                    <th>Nama Juruteknik</th>
+                                    <th>Catatan</th>
+                                    <th>Tarikh Memohon</th>
+                                    <th>Tarikh Selesai</th>
+                                    <th>Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="requestsTableBody">
+                                <tr class="empty-row">
+                                    <td colspan="10" class="text-center">Belum ada permohonan.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Modal Form Permohonan -->
+                <div id="requestModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 id="requestModalTitle">➕ Tambah Permohonan</h2>
+                            <button class="modal-close" id="closeRequestModal">&times;</button>
+                        </div>
+                        <form id="addRequestForm" class="form-container">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="reqCust">Nama Pengadu</label>
+                                    <!--// reqRequester gantikan kepada reqCUst-->
+                                    <input type="text" id="reqCust" required placeholder="Nama pengadu">
+                                    <!-- nama pengadu-->
+                                </div>
+                                <div class="form-group">
+                                    <label for="reqModel">Model Komputer</label>
+                                    <!--// letakkan reqModel Model Komputer-->
+                                    <select id="reqModel">
+                                        <option value="">-- Pilih Model --</option>
+                                        <option value="Desktop">Desktop</option>
+                                        <option value="Laptop">Laptop</option>
+                                        <option value="Bahan Pakai Habis">Bahan Pakai Habis</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="reqJenama">Jenama Komputer</label> <!--// reqJenama-->
+                                    <select id="reqJenama">
+                                        <option value="">-- Pilih Jenama --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="reqNoSiri">No Siri Komputer</label> <!--// reqNoSiri-->
+                                    <input type="text" id="reqNoSiri" placeholder="Masukkan Nombor Siri Komputer">
+                                </div>
+                                <div class="form-group">
+                                    <label for="reqRequestItem">Alat Ganti Dipohon</label>
+                                    <select id="reqRequestItem">
+                                        <option value="">-- Pilih Item --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="groupSiriGanti">
+                                    <label for="reqSiriGanti">No Siri Alat Ganti</label> <!--// reqNoSiri-->
+                                    <input type="text" id="reqSiriGanti" placeholder="Masukkan No Siri Alat Ganti">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group" style="display:block;" id="groupStatus">
+                                    <label for="reqStatus">Status</label>
+                                    <select id="reqStatus">
+                                        <option value="Baru">Baru</option>
+                                        <option value="Dalam Proses">Dalam Proses</option>
+                                        <option value="Selesai">Selesai</option>
+                                        <option value="Ditolak">Ditolak</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="reqJuruteknik">Nama Juruteknik</label>
+                                    <select id="reqJuruteknik">
+                                        <option value="">-- Pilih Juruteknik --</option>
+                                        <option value="Ikmal">Ikmal</option>
+                                        <option value="Bala">Bala</option>
+                                        <option value="Cici">Cici</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="groupDateEnd">
+                                    <label for="reqDateEnd">Tarikh Selesai</label>
+                                    <!--// reqDateEnd-muncul selesai butang selesai dipilih auto update date-->
+                                    <input type="datetime-local" id="reqDateEnd" placeholder="Selesai">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="reqcatat">Catatan</label>
+                                <textarea id="reqcatat" rows="7" placeholder="Catatan (opsional)"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" id="cancelRequestBtn">Batal</button>
+                                <button type="submit" class="btn btn-primary">💾 Simpan Permohonan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+
+                <!------------------------------------------------------------------------------>
+                <!-------------------------BAHAGIAN SENARAI ALAT GANTI ------------------------>
+                <!------------------------------------------------------------------------------>
+                <!-- Equipment List Section -->
+                <section id="equipment-list" class="section">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <h2>📦 Senarai Alat Ganti Table Dan Kuantiti </h2>
+                            <p style="color: #7f8c8d; margin-bottom: 1;">Senarai item alat Ganti komputer .</p>
+                        </div>
+                        <button class="btn btn-primary" id="openAddEquipmentForm">➕ Tambah senarai Baru Alat
+                            Ganti</button>
+                    </div>
+
+                    <!--table list area-->
+                    <div class="table-responsive">
+                        <table class="equipment-table" id="equipmentTable"> <!--equipmentTable-->
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Syarikat/Vendor</th>
+                                    <th>Model Komputer</th>
+                                    <th>Alat Ganti Dipohon</th>
+                                    <th>Nama Model</th> <!--Butang-->
+                                    <th>Kuantiti Sebenar</th>
+                                    <th>Harga Seunit</th>
+                                    <th>Total Harga</th>
+                                    <th>Status/catat</th>
+                                    <th>Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="equipmentTableBody">
+                                <tr class="empty-row">
+                                    <td colspan="7" class="text-center">Belum ada data peralatan. Tambahkan peralatan
+                                        baru
+                                        untuk memulai.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top:15px; display:flex; gap:10px; align-items:center;">
+                        <input type="file" id="importEquipmentFile" accept=".csv,.xlsx" />
+                        <button class="btn btn-secondary" id="importEquipmentBtn">📤 Import (CSV/XLSX)</button>
+                        <small style="color:#7f8c8d;">Format: Model Komputer, Alat Ganti Dipohon, Kuantiti Sebenar
+                        </small>
+                    </div>
+                </section>
+
+                <!-- Modal Form Tambah Peralatan dalam senarai alat ganti -->
+                <div id="equipmentModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 id="modalTitle">➕ Tambah Alat Ganti Form</h2>
+                            <button class="modal-close" id="closeModalBtn">&times;</button>
+                        </div>
+                        <form id="addEquipmentForm" class="form-container">
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 100%;">
+                                    <label for="E_Syarikat">Syarikat / Vendor <span class="required">*</span></label>
+                                    <select id="E_Syarikat" required>
+                                        <option value="">-- Pilih Syarikat --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="komp11">Pilih Model <span class="required">*</span></label>
+                                    <select id="komp11">
+                                        <option value="">-- Pilih Model --</option>
+                                        <option value="DESKTOP">DESKTOP</option>
+                                        <option value="LAPTOP">LAPTOP</option>
+                                        <option value="BAHAN PAKAI HABIS">BAHAN PAKAI HABIS</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="NamaPeralatan">Nama Alat Ganti <span class="required">*</span></label>
+                                    <!--equipmentName ganti kepada NamaPeralatan-->
+                                    <input type="text" id="NamaPeralatan" required placeholder="Contoh: Motherboard">
+                                </div>
+                                <div class="form-group"> <!--equipmentModel ganti kepada NamaModel  -->
+                                    <label for="NamaModel">Nama Model</label>
+                                    <input type="text" id="NamaModel" placeholder="Contoh: 860 EVO">
+                                </div>
+                            </div>
+
+                            <div class="form-divider1">
+                                <span>KUANTITI DAN HARGA</span>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group"> <!--equipmentQuantity ganti kepada Quantity -->
+                                    <label for="EQuantity">Kuantiti</label>
+                                    <input type="number" id="EQuantity" min="1" value="1">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group"> <!--equipmentQuantity ganti kepada Quantity -->
+                                    <label for="EHargaUnit">Harga Seunit (RM)</label>
+                                    <input type="number" id="EHargaUnit" min="0" value="0" step="0.01">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group"> <!--equipmentQuantity ganti kepada Quantity -->
+                                    <label for="ETotalRM">Total Harga AutoSum (RM)</label>
+                                    <input type="number" id="ETotalRM" min="0" value="0" step="0.01" readonly
+                                        style="background-color: #f8f9fa;">
+                                </div>
+                            </div>
+
+
+                            <div class="form-row">
+                                <div class="form-group"> <!--equipmentNotes ganti kepada Catatan1 -->
+                                    <label for="CatitAlatGanti">Catatan/Keterangan</label>
+                                    <textarea id="CatitAlatGanti" rows="3"
+                                        placeholder="Catatan tambahan tentang peralatan ini"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">💾 Simpan Peralatan</button>
+                                <button type="button" class="btn btn-secondary" id="cancelModalBtn">Batal</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+
+
+
+
+
+                <!------------------------------------------------------------------------------>
+                <!-------------------------BAHAGIAN SENARAI KOMPUTER / DESKTOP /Laptop------------------------------->
+                <!-- Equipment List Section -->
+                <section id="equipment-listPC" class="section">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <h2>📦 Senarai Komputer Desktop/Laptop/Alat Pakai Habis </h2>
+                            <p style="color: #7f8c8d; margin-bottom: 1;">Senarai item alat Ganti komputer .</p>
+                        </div>
+                        <button class="btn btn-primary" id="openAddComputerForm">➕ Tambah Komputer Baru</button>
+                    </div>
+
+                    <!--table list area-->
+                    <div class="table-responsive">
+                        <table class="equipment-table" id="computerTable">
+                            <!--equipmentTable renamed to computerTable-->
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Model Komputer</th>
+                                    <th>Jenama & Model</th>
+                                    <th>Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="computerTableBody">
+                                <tr class="empty-row">
+                                    <td colspan="4" class="text-center">Belum ada data komputer. Tambahkan komputer baru
+                                        untuk memulai.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top:15px; display:flex; gap:10px; align-items:center;">
+                        <input type="file" id="importComputerFile" accept=".csv,.xlsx" />
+                        <button class="btn btn-secondary" id="importComputerBtn">📤 Import (CSV/XLSX)</button>
+                        <small style="color:#7f8c8d;">Format: Model Komputer, Jenama & Model</small>
+                    </div>
+                </section>
+
+                <!-- Modal Form Tambah Peralatan dalam senarai alat ganti -->
+                <div id="computerModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 id="computerModalTitle">➕ Tambah Komputer Baru</h2>
+                            <button class="modal-close" id="closeComputerModalBtn">&times;</button>
+                        </div>
+                        <form id="addComputerForm" class="form-container">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="komp2">Pilih Model <span class="required">*</span></label>
+                                    <select id="komp2" required>
+                                        <option value="">-- Pilih Model --</option>
+                                        <option value="Desktop">DESKTOP</option>
+                                        <option value="Laptop">LAPTOP</option>
+                                        <option value="Bahan Pakai Habis">BAHAN PAKAI HABIS</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="NamaPC">Jenama & Model <span class="required">*</span></label>
+                                    <input type="text" id="NamaPC" required placeholder="Contoh: Dell Optiplex 9020">
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">💾 Simpan Komputer</button>
+                                <button type="button" class="btn btn-secondary"
+                                    id="cancelComputerModalBtn">Batal</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!------------------------------------------------------------------------------>
+                <!-------------------- BAHAGIAN PENERIMAAN ALAT GANTI -------------------------->
+                <!------------------------------------------------------------------------------>
+                <section id="penerimaan" class="section">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <h2>📦 Penerimaan Alat Ganti</h2>
+                            <p style="color: #7f8c8d; margin-bottom: 1;">Pendaftaran alat ganti yang baru diterima
+                                daripada
+                                vendor.</p>
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn btn-secondary" id="importPenerimaanBtn">📥 Import Excel</button>
+                            <button class="btn btn-primary" id="openAddPenerimaanForm">➕ Terima Item Baru</button>
+                        </div>
+                    </div>
+
+                    <!-- Grid Ringkasan Penerimaan -->
+                    <div class="stats-grid" style="margin-bottom:20px;">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-boxes"></i></div>
+                            <div class="stat-content">
+                                <span class="stat-label">Item Baru Ditambah</span>
+                                <p class="stat-value" id="countNewReceived">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-tools"></i></div>
+                            <div class="stat-content">
+                                <span class="stat-label">Telah Digunakan</span>
+                                <p class="stat-value" id="countUsedReceived">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table Penerimaan (PC View) -->
+                    <div class="table-responsive">
+                        <table class="inventory-table" id="penerimaanTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Vendor</th>
+                                    <th>Jenis</th>
+                                    <th>Alat Ganti</th>
+                                    <th>Model</th>
+                                    <th>No Siri</th>
+                                    <th>Tarikh</th>
+                                    <th>Status</th>
+                                    <th>Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="penerimaanTableBody">
+                                <tr class="empty-row">
+                                    <td colspan="9" class="text-center">Belum ada rekod penerimaan.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Modal Form Penerimaan -->
+                <div id="penerimaanModal" class="modal">
+                    <div class="modal-content" style="max-width:700px;">
+                        <div class="modal-header">
+                            <h2 id="penerimaanModalTitle">➕ Daftar Penerimaan Alat Ganti</h2>
+                            <button class="modal-close" id="closePenerimaanModal">&times;</button>
+                        </div>
+                        <form id="addPenerimaanForm" class="form-container">
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 100%;">
+                                    <label for="recvVendor">Nama Syarikat/Vendor <span class="required">*</span></label>
+                                    <select id="recvVendor" required>
+                                        <option value="">-- Pilih Syarikat --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="recvJenis">Jenis Model <span class="required">*</span></label>
+                                    <select id="recvJenis" required>
+                                        <option value="">-- Pilih Jenis --</option>
+                                        <option value="Desktop">Desktop</option>
+                                        <option value="Laptop">Laptop</option>
+                                        <option value="Bahan Pakai Habis">Bahan Pakai Habis</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="recvItem">Nama Alat Ganti <span class="required">*</span></label>
+                                    <select id="recvItem" required>
+                                        <option value="">-- Pilih Alat Ganti --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="recvModel">Nama Model User <span class="required">*</span></label>
+                                    <input type="text" id="recvModel" required placeholder="Contoh: WD Blue 1TB">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="recvSiri">No Siri / Scan QR</label>
+                                    <div style="display:flex; gap:5px;">
+                                        <input type="text" id="recvSiri" placeholder="Manual isi atau scan">
+                                        <button type="button" class="btn btn-secondary" id="scanQRBtn">📷 Scan</button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="recvDate">Tarikh Terima <span class="required">*</span></label>
+                                    <input type="date" id="recvDate" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="recvWarranty">Warranty (Tahun/Bulan)</label>
+                                    <input type="text" id="recvWarranty" placeholder="Contoh: 3 Tahun">
+                                </div>
+                                <div class="form-group">
+                                    <label for="recvTech">Nama Juruteknik <span></span></label>
+                                    <select id="recvTech" required>
+                                        <option value="">-- Pilih Juruteknik --</option>
+                                        <option value="Ikmal">Ikmal</option>
+                                        <option value="Bala">Bala</option>
+                                        <option value="Cici">Cici</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="recvStatus">Status <span></span></label>
+                                <select id="recvStatus" required>
+                                    <option value="Belum digunakan" selected>Belum digunakan</option>
+                                    <option value="Telah digunakan">Telah digunakan</option>
+                                    <option value="Rosak">Rosak</option>
+                                </select>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">💾 Simpan & Tambah Baru</button>
+                                <button type="button" class="btn btn-secondary" id="closePenerimaanBtn">Tutup</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+
+
+
+
+
+
+
+
+                <!-- Syarikat Section -->
+                <section id="syarikat" class="section">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <h2>🏢 Pengurusan Syarikat / Vendor</h2>
+                            <p style="color: #7f8c8d; margin-bottom: 1;">Senarai syarikat dan maklumat kontrak/bajet.
+                            </p>
+                        </div>
+                        <button class="btn btn-primary" id="openAddSyarikatForm">➕ Daftar Syarikat Baru</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="inventory-table" id="syarikatTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>ID UMSBEN</th>
+                                    <th>Nama Syarikat</th>
+                                    <th>Pemilik</th>
+                                    <th>Tarikh Kontrak</th>
+                                    <th>Status</th>
+                                    <th>Bajet (RM)</th>
+                                    <th>Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="syarikatTableBody">
+                                <tr class="empty-row">
+                                    <td colspan="8" class="text-center">Belum ada data syarikat.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Modal Form Syarikat -->
+                <div id="syarikatModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 id="syarikatModalTitle">➕ Daftar Syarikat Baru</h2>
+                            <button class="modal-close" id="closeSyarikatModal">&times;</button>
+                        </div>
+                        <form id="syarikatForm" class="form-container">
+                            <input type="hidden" id="syarikatIndex">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="syarikatID">ID UMSBEN <span class="required">*</span></label>
+                                    <input type="text" id="syarikatID" required placeholder="Contoh: UMSBEN-2026-001">
+                                </div>
+                                <div class="form-group">
+                                    <label for="syarikatNama">Nama Syarikat / Vendor <span
+                                            class="required">*</span></label>
+                                    <input type="text" id="syarikatNama" required
+                                        placeholder="Contoh: Maju Jaya Sdn Bhd">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="syarikatPemilik">Nama Pemilik <span class="required">*</span></label>
+                                    <input type="text" id="syarikatPemilik" required placeholder="Nama penuh pemilik">
+                                </div>
+                                <div class="form-group">
+                                    <label for="syarikatStatus">Status <span class="required">*</span></label>
+                                    <select id="syarikatStatus" required>
+                                        <option value="Aktif">Aktif</option>
+                                        <option value="Tidak Aktif">Tidak Aktif</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="syarikatMula">Tarikh Mula <span class="required">*</span></label>
+                                    <input type="date" id="syarikatMula" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="syarikatAkhir">Tarikh Akhir <span class="required">*</span></label>
+                                    <input type="date" id="syarikatAkhir" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="syarikatBajet">Jumlah Keseluruhan Bajet (RM) <span
+                                        class="required">*</span></label>
+                                <input type="number" id="syarikatBajet" required min="0" step="0.01" placeholder="0.00">
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">💾 Simpan Syarikat</button>
+                                <button type="button" class="btn btn-secondary" id="cancelSyarikatBtn">Batal</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <!-- Laporan Stok Section -->
+                <section id="budget" class="section">
+                    <!-- Modal Preview Laporan -->
+                    <div id="previewReportModal" class="modal">
+                        <div class="modal-content"
+                            style="width: 90%; max-width: 1200px; overflow-y: auto; max-height: 90vh;">
+                            <div class="modal-header">
+                                <h2>📊 Preview Laporan Stok</h2>
+                                <button class="modal-close" id="closePreviewModal">&times;</button>
+                            </div>
+                            <div class="modal-body" id="previewReportBody">
+                                <!-- Laporan akan dijana di sini -->
+                            </div>
+                            <div class="modal-footer" style="text-align: right;">
+                                <button class="btn btn-secondary" id="closePreviewBtn">Tutup</button>
+                                <button class="btn btn-primary" id="printPreviewBtn">🖨️ Cetak Laporan</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                        <div>
+                            <h2>📊 LAPORAN STOK</h2>
+                            <p style="color:#7f8c8d;margin-bottom:0;">Laporan penggunaan dan baki stok alat ganti.</p>
+                        </div>
+                        <div style="display:flex;gap:10px;">
+                            <button class="btn btn-secondary" id="printStockReportBtn">🖨️ Cetak Laporan</button>
+                            <button class="btn btn-primary" id="refreshStockReportBtn">🔄 Jana Laporan</button>
+                        </div>
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div id="stockSummaryCards"
+                        style="display:none;margin-bottom:25px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;">
+                        <div class="stat-card" style="background:linear-gradient(135deg,#667eea 0%,#6e4b91 100%);">
+                            <div class="stat-icon">📦</div>
+                            <div class="stat-info">
+                                <div class="stat-label1">Jumlah Item</div>
+                                <div class="stat-value-laporan" id="totalItemsCount">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card" style="background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);">
+                            <div class="stat-icon">⚠️</div>
+                            <div class="stat-info">
+                                <div class="stat-label1">Stok Kritikal (&gt;80%)</div>
+                                <div class="stat-value-laporan" id="criticalStockCount">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card" style="background:linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);">
+                            <div class="stat-icon">✅</div>
+                            <div class="stat-info">
+                                <div class="stat-label1">Stok Mencukupi</div>
+                                <div class="stat-value-laporan" id="healthyStockCount">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="inventory-table" id="stockReportTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Model Komputer</th>
+                                    <th>Alat Ganti</th>
+                                    <th>Jumlah Stok</th>
+                                    <th>Penggunaan</th>
+                                    <th>Baki</th>
+                                    <th>Peratus Penggunaan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stockReportBody">
+                                <tr class="empty-row">
+                                    <td colspan="7" class="text-center">Tiada data laporan. Klik "Jana Laporan" untuk
+                                        menjana.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                <!---admin page-->
+                <section id="adminSection" class="section">
+                    <div class="section-header">
+                        <div class="header-title">
+                            <h2>🔐 Pengurusan Pengguna (Admin)</h2>
+                            <p style="color:#7f8c8d;margin-bottom:0;">Kawal akses, tambah atau padam pengguna dan
+                                pentadbir sistem.</p>
+                        </div>
+                    </div>
+
+                    <!-- FORM ADD USER -->
+                    <div class="glass-panel" style="margin-bottom: 2rem; padding: 25px;">
+                        <h3 style="margin-bottom: 20px; color: var(--primary); font-size: 1.2rem;">➕ Tambah / Daftar
+                            Pengguna Baru</h3>
+                        <form id="addUserForm" class="form-container">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="name">Nama Penuh <span class="required">*</span></label>
+                                    <input type="text" id="name" placeholder="Contoh: Ahmad Albab" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Email Rasmi <span class="required">*</span></label>
+                                    <input type="email" id="email" placeholder="Contoh: ahmad@domain.com" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="role">Peringkat Akses <span class="required">*</span></label>
+                                    <select id="role" required>
+                                        <option value="">-- Pilih Peringkat --</option>
+                                        <option value="admin">Pentadbir Sitem (Admin)</option>
+                                        <option value="user">Pengguna Biasa (User)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="password">Kata Laluan Baru <span class="required">*</span></label>
+                                    <input type="password" id="password" placeholder="Min. 6 askara" required>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer"
+                                style="margin-top: 15px; text-align: right; border-top: none; padding-bottom: 0;">
+                                <button type="submit" class="btn btn-primary">➕ Daftar Pengguna</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- TABLE -->
+                    <div class="table-responsive">
+                        <table class="inventory-table" id="adminTable">
+                            <thead>
+                                <tr>
+                                    <th>Nama Pengguna</th>
+                                    <th>Email Didaftar</th>
+                                    <th>Peringkat (Role)</th>
+                                    <th>Tindakan Sistem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userTable">
+                                <tr class="empty-row">
+                                    <td colspan="4" class="text-center">Sedang dimuatkan...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+            </main>
+
+            <!-- Footer -->
+            <footer class="footer">
+                <p>&copy; 2026 Dashboard Alat Ganti Komputer | Sistem Pengurusan Inventori Alat Ganti Komputer</p>
+            </footer>
+        </div>
+
+        <!------BAHAGIAN LAPORAN-->
+
+        <!-- Modal for Editable Report Preview dalam permhonan user-->
+        <div id="reportPreviewModal" class="modal">
+            <div class="modal-content report-preview-content" style="max-width: 900px;">
+                <div class="modal-header">
+                    <h2>🛠️ Edit & Pratonton Laporan</h2>
+                    <button class="modal-close" id="closeReportPreview">&times;</button>
+                </div>
+
+                <div class="report-ribbon">
+                    <div class="ribbon-tabs">
+                        <button class="ribbon-tab active" onclick="switchRibbonTab('tab-home')">Utama</button>
+                        <button class="ribbon-tab" onclick="switchRibbonTab('tab-insert')">Sisipan</button>
+                        <button class="ribbon-tab" onclick="switchRibbonTab('tab-layout')">Tata Letak</button>
+                        <div class="ribbon-actions-right">
+                            <button class="btn btn-secondary btn-small" id="saveReportSettingsBtn">💾 Simpan
+                                Setting</button>
+                            <button class="btn btn-primary btn-small" id="confirmPrintBtn">🖨️ Cetak</button>
+                        </div>
+                    </div>
+
+                    <div class="ribbon-content">
+                        <!-- Home Tab -->
+                        <div id="tab-home" class="ribbon-panel active">
+                            <div class="toolbar-group">
+                                <span class="toolbar-label">Font</span>
+                                <select id="fontFamilySelect" class="toolbar-select"
+                                    onchange="formatDoc('fontName', this.value)">
+                                    <option value="Inter, sans-serif">Default (Inter)</option>
+                                    <option value="Arial, sans-serif">Arial</option>
+                                    <option value="'Times New Roman', serif">Times New Roman</option>
+                                    <option value="'Courier New', monospace">Courier New</option>
+                                    <option value="Georgia, serif">Georgia</option>
+                                </select>
+                                <button class="btn btn-small btn-secondary tool-btn" id="decreaseFontSize"
+                                    title="Kecilkan">-</button>
+                                <input type="number" id="fontSizeInput" class="toolbar-input" value="10" min="6"
+                                    max="100" title="Saiz Font">
+                                <button class="btn btn-small btn-secondary tool-btn" id="increaseFontSize"
+                                    title="Besarkan">+</button>
+                            </div>
+                            <div class="toolbar-divider"></div>
+                            <div class="toolbar-group">
+                                <span class="toolbar-label">Gaya</span>
+                                <button class="btn btn-small btn-secondary tool-btn" onclick="formatDoc('bold')"
+                                    title="Tebal"><b>B</b></button>
+                                <button class="btn btn-small btn-secondary tool-btn" onclick="formatDoc('italic')"
+                                    title="Condong"><i>I</i></button>
+                                <button class="btn btn-small btn-secondary tool-btn" onclick="formatDoc('underline')"
+                                    title="Garis"><u>U</u></button>
+                                <input type="color" id="foreColorPicker" onchange="formatDoc('foreColor', this.value)"
+                                    title="Warna">
+                            </div>
+                            <div class="toolbar-divider"></div>
+                            <div class="toolbar-group">
+                                <span class="toolbar-label">Paragraph</span>
+                                <button class="btn btn-small btn-secondary tool-btn" onclick="formatDoc('justifyLeft')"
+                                    title="Kiri">左</button>
+                                <button class="btn btn-small btn-secondary tool-btn"
+                                    onclick="formatDoc('justifyCenter')" title="Tengah">中</button>
+                                <button class="btn btn-small btn-secondary tool-btn" onclick="formatDoc('justifyRight')"
+                                    title="Kanan">右</button>
+                                <button class="btn btn-small btn-secondary tool-btn" onclick="formatDoc('justifyFull')"
+                                    title="Penuh">≡</button>
+                            </div>
+                        </div>
+
+                        <!-- Insert Tab -->
+                        <div id="tab-insert" class="ribbon-panel">
+                            <div class="toolbar-group">
+                                <span class="toolbar-label">Media</span>
+                                <label for="reportLogoInput" class="btn btn-small btn-secondary">🖼️ Ambil Logo</label>
+                                <input type="file" id="reportLogoInput" accept="image/*" style="display:none;">
+                            </div>
+                            <div class="toolbar-divider"></div>
+                            <div class="toolbar-group">
+                                <span class="toolbar-label">Saiz Logo</span>
+                                <input type="range" id="logoWidthSlider" min="50" max="500" value="150"
+                                    style="width:150px;">
+                                <span id="logoWidthValue" style="font-size:11px;">150px</span>
+                            </div>
+                        </div>
+
+                        <!-- Layout Tab -->
+                        <div id="tab-layout" class="ribbon-panel">
+                            <div class="toolbar-group">
+                                <span class="toolbar-label">Jarak Barisan (Line Height)</span>
+                                <select id="lineHeightSelect" class="toolbar-select"
+                                    onchange="updateLineHeight(this.value)">
+                                    <option value="1">Sempit (1.0)</option>
+                                    <option value="1.2" selected>Normal (1.2)</option>
+                                    <option value="1.5">Sederhana (1.5)</option>
+                                    <option value="2">Luas (2.0)</option>
+                                </select>
+                            </div>
+                            <div class="toolbar-divider"></div>
+                            <div class="toolbar-group">
+                                <span class="toolbar-label">Transform</span>
+                                <button class="btn btn-small btn-secondary" onclick="transformText('uppercase')">HURUF
+                                    BESAR</button>
+                                <button class="btn btn-small btn-secondary" onclick="transformText('lowercase')">huruf
+                                    kecil</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="reportEditableArea" contenteditable="true" class="report-editable-container">
+                    <!-- Report content will be injected here -->
+                </div>
+
+                <div class="modal-footer">
+                    <p style="font-size: 0.85rem; color: #666;">💡 Anda boleh klik pada tulisan di atas untuk mengedit
+                        kandungan sebelum print.</p>
+                    <button type="button" class="btn btn-secondary" id="cancelReportPreview">Batal</button>
+                </div>
+            </div>
+
+
+
+            <!--------login firebase auth-->
+
+            <script type="module">
+                import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+                import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+                import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+
+                const firebaseConfig = {
+                    apiKey: "AIzaSyAYBhrerG2yfHk-xFna0tLI-QbaVDNaV5M",
+                    authDomain: "sistem-alat-ganti.firebaseapp.com",
+                    projectId: "sistem-alat-ganti",
+                    storageBucket: "sistem-alat-ganti.firebasestorage.app",
+                    messagingSenderId: "974832583504",
+                    appId: "1:974832583504:web:2001b035fb35093c252255",
+                    measurementId: "G-44E4RC3EC8"
+                };
+
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+
+                // Initialize secondary app for creating users without logging out admin
+                const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+                const secondaryAuth = getAuth(secondaryApp);
+
+                if (sessionStorage.getItem("loggedIn") !== "true") {
+                    window.location.href = "../index.html";
+                }
+
+                async function loadUsers() {
+                    const tableBody = document.getElementById("userTable");
+                    if (!tableBody) return;
+
+                    tableBody.innerHTML = "";
+                    try {
+                        const snapshot = await getDocs(collection(db, "users"));
+                        snapshot.forEach(docSnap => {
+                            const u = docSnap.data();
+                            const tr = document.createElement("tr");
+                            tr.innerHTML = `
+                                <td>${u.name || "-"}</td>
+                                <td>${u.email}</td>
+                                <td>${u.role}</td>
+                                <td>
+                                    <button class="btn btn-danger btn-small admin-delete" style="padding: 5px 10px;" data-id="${docSnap.id}">Padam</button>
+                                </td>
+                            `;
+                            tableBody.appendChild(tr);
+                        });
+
+                        document.querySelectorAll('.admin-delete').forEach(btn => {
+                            btn.addEventListener('click', async (e) => {
+                                const id = e.target.getAttribute('data-id');
+                                if (confirm("Adakah anda pasti mahu memadam pengguna ini?")) {
+                                    try {
+                                        await deleteDoc(doc(db, "users", id));
+
+                                        // Sync to Excel (remove admin)
+                                        if (typeof window.turboSync === 'function') {
+                                            window.turboSync('delete', 'admin', { id: id });
+                                        }
+
+                                        alert("Pengguna berjaya dipadam dari rekod.");
+                                        loadUsers();
+                                    } catch (err) {
+                                        console.error(err);
+                                        alert("Gagal memadam. Pastikan anda mempunyai kebenaran admin.");
+                                    }
+                                }
+                            });
+                        });
+                    } catch (err) {
+                        console.error("Gagal load users: ", err);
+                    }
+                }
+
+                const addUserForm = document.getElementById("addUserForm");
+                if (addUserForm) {
+                    addUserForm.addEventListener("submit", async (e) => {
+                        e.preventDefault();
+
+                        const name = document.getElementById("name").value.trim();
+                        const email = document.getElementById("email").value.trim();
+                        const role = document.getElementById("role").value;
+                        const password = document.getElementById("password").value;
+
+                        try {
+                            const submitBtn = addUserForm.querySelector('button[type="submit"]');
+                            if (submitBtn) submitBtn.disabled = true;
+
+                            // 1. Create user in Firebase Auth using secondary app
+                            const userCred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+                            const uid = userCred.user.uid;
+
+                            // 2. Save user details in Firestore
+                            await setDoc(doc(db, "users", uid), {
+                                name: name,
+                                email: email,
+                                role: role,
+                                createdAt: new Date().toISOString()
+                            });
+
+                            // 3. Save to Excel / Google Sheets
+                            if (typeof window.turboSync === 'function') {
+                                window.turboSync('create', 'admin', { id: email, name: name, email: email, role: role, password: password });
+                            }
+
+                            // 4. Logout the secondary app
+                            await signOut(secondaryAuth);
+
+                            alert("Pengguna berjaya ditambah!");
+                            addUserForm.reset();
+                            loadUsers();
+                        } catch (error) {
+                            if (error.code === 'auth/email-already-in-use') {
+                                try {
+                                    // Save fallback in Firestore with email
+                                    await setDoc(doc(db, "users", email), {
+                                        name: name,
+                                        email: email,
+                                        role: role,
+                                        createdAt: new Date().toISOString()
+                                    });
+
+                                    // Sync to Excel
+                                    if (typeof window.turboSync === 'function') {
+                                        window.turboSync('create', 'admin', { id: email, name: name, email: email, role: role, password: password });
+                                    }
+
+                                    alert("Emel sudah wujud di sistem Auth, tetapi rekod admin berjaya disimpan ke dalam Excel dan pangkalan data!");
+                                    addUserForm.reset();
+                                    loadUsers();
+                                } catch (err) {
+                                    alert("Ralat semasa menyelaraskan dengan Excel: " + err.message);
+                                }
+                            } else {
+                                console.error("Ralat menambah pengguna:", error);
+                                alert("Gagal! " + error.message);
+                            }
+                        } finally {
+                            const submitBtn = addUserForm.querySelector('button[type="submit"]');
+                            if (submitBtn) submitBtn.disabled = false;
+                        }
+                    });
+                }
+
+                loadUsers();
+            </script>
+
+
+
+
+        </div> <!-- End main-content-wrapper -->
+    </div> <!-- End app-layout -->
+
+    <script src="../script.js" defer></script>
+    <!-- SheetJS for .xlsx import -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+
+</html>
