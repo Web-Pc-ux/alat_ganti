@@ -1,5 +1,5 @@
 // Cloud Configuration (Turbo Engine v5.3 Style)
-const GS_URL = "https://script.google.com/macros/s/AKfycbx0SJ_R7PmUIo4fiA2Nz8kmU2ye49kWYYdElB6yx6TbxnsUHqPbPD0bjvI3sRGWAmVHdw/exec";
+const GS_URL = "https://script.google.com/macros/s/AKfycbzwLTgG82wdNgcvIunoFPjftlp1DImjGUq7_sNwm2AtEWV9qC0TENYCLg1BScctnI3EOA/exec";
 const AUTH_TOKEN = "CHRIS_SHEETS_KEY_2026";
 
 // Data Stores
@@ -7,6 +7,8 @@ let equipment = [];
 let equipmentIdCounter = 1;
 let requests = [];
 let requestIdCounter = 1;
+let computerList = [];
+let computerIdCounter = 1;
 let budget = 0;
 let budgetUsed = 0;
 let Admin = 0;
@@ -462,7 +464,7 @@ function updateCategoryFilters() {
 // Requests (Permohonan user)
 // -----------------------
 
-function addRequest({ cust, model, catat, status = 'Baru' }) {
+function addRequest({ cust, model, jenama, nosiri, Requestitem, nosiriganti, juruteknik, catat, status = 'Baru' }) {
     const newReq = {
         id: requestIdCounter++,
         cust: cust || 'Unknown',
@@ -474,7 +476,6 @@ function addRequest({ cust, model, catat, status = 'Baru' }) {
         status: status,
         juruteknik: juruteknik,
         catat: catat,
-
         date: new Date().toLocaleDateString('id-ID')
     };
     requests.push(newReq);
@@ -578,7 +579,7 @@ function displayRequests() {
             <td data-label="Selesai">${r.dateend}</td>
             <td data-label="Tindakan">
                 <div class="action-buttons">
-                    <button class="btn btn-edit" onclick="promptEditRequest(${r.id})">✓ï¸</button>
+                    <button class="btn btn-edit" onclick="promptEditRequest(${r.id})">✏️ï¸</button>
                     <button class="btn btn-danger" onclick="deleteRequest(${r.id})">🗑️</button>
                 </div>
             </td>
@@ -1769,7 +1770,7 @@ async function turboSync(action, sheet, data) {
             body: JSON.stringify(payload)
         });
 
-        console.log(`ðŸš€ TurboSync ${action} pada ${sheet} dihantar ke cloud.`);
+        console.log(`🚀 TurboSync ${action} pada ${sheet} dihantar ke cloud.`);
     } catch (err) {
         console.error(`âŒ TurboSync Gagal: ${action} ${sheet}`, err);
     }
@@ -1777,7 +1778,7 @@ async function turboSync(action, sheet, data) {
 
 async function turboLoadAll() {
     if (!GS_URL) return;
-    showNotification('ðŸ”„ Menghubungkan ke Turbo Engine...', 'info');
+    showNotification('🔄 Menghubungkan ke Turbo Engine...', 'info');
 
     try {
         // Gunakan mode cors dan redirect follow untuk Google Apps Script
@@ -1786,11 +1787,11 @@ async function turboLoadAll() {
             method: 'GET',
             redirect: 'follow'
         });
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const result = await response.json();
 
         if (result.status === 'success') {
@@ -1974,9 +1975,6 @@ function initialize() {
 // ----------------------------------------------------------------------------
 // SENARAI KOMPUTER LOGIC (NEW SECTION)
 // ----------------------------------------------------------------------------
-
-let computerList = [];
-let computerIdCounter = 1;
 
 function loadComputerData() {
     loadDataFromStorage();
@@ -2406,7 +2404,7 @@ function printStockReport() {
 
             <div class="summary">
                 <div class="summary-card">
-                    <h3>ðŸ“¦ Jumlah Item</h3>
+                    <h3>📦 Jumlah Item</h3>
                     <div class="value">${document.getElementById('totalItemsCount').textContent}</div>
                 </div>
                 <div class="summary-card">

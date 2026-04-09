@@ -1,25 +1,33 @@
-const fs = require('fs');
-const path = 'd:\\Webmaker\\website-vibe-alatganti\\script.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-let content = fs.readFileSync(path, 'utf8');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Fix all broken emoji patterns using simple string replacement
-// The broken patterns come from double-encoding UTF-8
+const scriptPath = path.join(__dirname, 'script.js');
+let content = fs.readFileSync(scriptPath, 'utf8');
 
-// Pattern: broken checkmark
-content = content.split('\u00e2\u0153\u201c').join('\u2713');  // â✓
-content = content.split('\u00e2\u0153\u0178').join('\u270f\ufe0f'); // â✏️ 
+const replacements = [
+    { from: /ðŸš€/g, to: '🚀' },
+    { from: /â Œ/g, to: '❌' },
+    { from: /ðŸ”„/g, to: '🔄' },
+    { from: /ðŸ” /g, to: '🔍' },
+    { from: /ðŸ“¦/g, to: '📦' },
+    { from: /✓ ï¸ /g, to: '✏️' },
+    { from: /✓ ï¸ /g, to: '📝' }, // Handle variation
+    { from: /\u00e2\u0153\u201c/g, to: '✓' },
+    { from: /ï¸ /g, to: '' }, // Remove lingering variation selectors
+    { from: /âœ“/g, to: '✓' }
+];
 
-// Try line-by-line approach for known broken strings
-const lines = content.split('\n');
-const fixedLines = lines.map(line => {
-    // Fix common broken notification strings
-    line = line.replace(/showNotification\('\[OK\]/g, "showNotification('✓");
-    line = line.replace(/\u00e2\u0153\u201c/g, '✓');
-    return line;
+replacements.forEach(r => {
+    content = content.replace(r.from, r.to);
 });
 
-content = fixedLines.join('\n');
+// Specific fixes for lines I saw
+content = content.replace(/onclick="promptEditRequest\(\$\{r\.id\}\)"\>✓/g, 'onclick="promptEditRequest(${r.id})">✏️');
+content = content.replace(/textContent = '✓  Edit Permohonan'/g, "textContent = '📝 Edit Permohonan'");
 
-fs.writeFileSync(path, content, 'utf8');
-console.log('Done');
+fs.writeFileSync(scriptPath, content, 'utf8');
+console.log('✅ script.js encoding fixed!');
