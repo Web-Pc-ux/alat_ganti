@@ -46,11 +46,23 @@
                     </ul>
                 </li>
 
-                <li><a href="#syarikat" class="nav-link"><i class="fas fa-building"></i> <span>Syarikat</span></a></li>
-                <li><a href="#budget" class="nav-link"><i class="fas fa-chart-pie"></i> <span>Laporan Stok</span></a>
+                <!-- DROPDOWN PENGURUSAN -->
+                <li class="nav-item-dropdown">
+                    <div class="dropdown-toggle" id="pengurusanToggle">
+                        <i class="fas fa-cogs"></i> <span>Pengurusan</span>
+                        <i class="fas fa-chevron-down dropdown-icon"></i>
+                    </div>
+                    <ul class="dropdown-menu" id="pengurusanMenu">
+                        <li><a href="#syarikat" class="nav-link"><i class="fas fa-building"></i>
+                                <span>Syarikat</span></a></li>
+                        <li><a href="#budget" class="nav-link"><i class="fas fa-chart-pie"></i> <span>Laporan
+                                    Stok</span></a></li>
+                        <li><a href="#juruteknikSection" class="nav-link"><i class="fas fa-user-tie"></i>
+                                <span>Juruteknik</span></a></li>
+                        <li><a href="#adminSection" class="nav-link"><i class="fas fa-user-shield"></i> <span>Pengguna
+                                    (Admin)</span></a></li>
+                    </ul>
                 </li>
-                <li><a href="#adminSection" class="nav-link"><i class="fas fa-user-shield"></i> <span>Admin
-                            Panel</span></a></li>
             </ul>
             <div class="sidebar-footer">
                 <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> <span>Log
@@ -64,13 +76,6 @@
                 <div class="header-content">
                     <h1>Sistem Urus Alat Ganti</h1>
                     <p class="subtitle">Pengurusan inventori dan perantaraan vendor secara profesional</p>
-                </div>
-                <!-- Mobile Logout Pill -->
-                <div class="header-actions">
-                    <button id="logoutBtnHeader" class="logout-pill">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Keluar</span>
-                    </button>
                 </div>
             </header>
 
@@ -212,9 +217,9 @@
                                     <!-- nama pengadu-->
                                 </div>
                                 <div class="form-group">
-                                    <label for="reqModel">Model Komputer</label>
+                                    <label for="reqModel">Model Komputer <span class="required">*</span></label>
                                     <!--// letakkan reqModel Model Komputer-->
-                                    <select id="reqModel">
+                                    <select id="reqModel" required>
                                         <option value="">-- Pilih Model --</option>
                                         <option value="Desktop">Desktop</option>
                                         <option value="Laptop">Laptop</option>
@@ -222,18 +227,18 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="reqJenama">Jenama Komputer</label> <!--// reqJenama-->
-                                    <select id="reqJenama">
+                                    <label for="reqJenama">Jenama Komputer <span class="required">*</span></label> <!--// reqJenama-->
+                                    <select id="reqJenama" required>
                                         <option value="">-- Pilih Jenama --</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="reqNoSiri">No Siri Komputer</label> <!--// reqNoSiri-->
-                                    <input type="text" id="reqNoSiri" placeholder="Masukkan Nombor Siri Komputer">
+                                    <label for="reqNoSiri">No Siri Komputer <span class="required">*</span></label> <!--// reqNoSiri-->
+                                    <input type="text" id="reqNoSiri" required placeholder="Masukkan Nombor Siri Komputer">
                                 </div>
                                 <div class="form-group">
-                                    <label for="reqRequestItem">Alat Ganti Dipohon</label>
-                                    <select id="reqRequestItem">
+                                    <label for="reqRequestItem">Alat Ganti Dipohon <span class="required">*</span></label>
+                                    <select id="reqRequestItem" required>
                                         <option value="">-- Pilih Item --</option>
                                     </select>
                                 </div>
@@ -253,12 +258,9 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="reqJuruteknik">Nama Juruteknik</label>
-                                    <select id="reqJuruteknik">
+                                    <label for="reqJuruteknik">Nama Juruteknik <span class="required">*</span></label>
+                                    <select id="reqJuruteknik" required>
                                         <option value="">-- Pilih Juruteknik --</option>
-                                        <option value="Ikmal">Ikmal</option>
-                                        <option value="Bala">Bala</option>
-                                        <option value="Cici">Cici</option>
                                     </select>
                                 </div>
                                 <div class="form-group" id="groupDateEnd">
@@ -611,9 +613,6 @@
                                     <label for="recvTech">Nama Juruteknik <span></span></label>
                                     <select id="recvTech" required>
                                         <option value="">-- Pilih Juruteknik --</option>
-                                        <option value="Ikmal">Ikmal</option>
-                                        <option value="Bala">Bala</option>
-                                        <option value="Cici">Cici</option>
                                     </select>
                                 </div>
                             </div>
@@ -829,6 +828,66 @@
                         </table>
                     </div>
                 </section>
+                <!-- Juruteknik Section -->
+                <section id="juruteknikSection" class="section">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <h2>👨🏻‍🔧 Pengurusan Juruteknik</h2>
+                            <p style="color: #7f8c8d; margin-bottom: 1;">Senarai nama juruteknik untuk tugasan
+                                penyelenggaraan.</p>
+                        </div>
+                        <button class="btn btn-primary" id="openAddJuruteknikForm">➕ Tambah Juruteknik</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="inventory-table" id="juruteknikTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nama Juruteknik</th>
+                                    <th>Email</th>
+                                    <th>Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="juruteknikTableBody">
+                                <tr class="empty-row">
+                                    <td colspan="4" class="text-center">Belum ada data juruteknik.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Modal Form Juruteknik -->
+                <div id="juruteknikModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 id="juruteknikModalTitle">➕ Daftar Juruteknik Baru</h2>
+                            <button class="modal-close" id="closeJuruteknikModal">&times;</button>
+                        </div>
+                        <form id="juruteknikForm" class="form-container">
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 100%;">
+                                    <label for="juruteknikNama">Nama Penuh <span class="required">*</span></label>
+                                    <input type="text" id="juruteknikNama" required placeholder="Contoh: Muhammad Ali">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 100%;">
+                                    <label for="juruteknikEmail">Email <span class="required">*</span></label>
+                                    <input type="email" id="juruteknikEmail" required
+                                        placeholder="Contoh: ali@domain.com">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">💾 Simpan Juruteknik</button>
+                                <button type="button" class="btn btn-secondary" id="cancelJuruteknikBtn">Batal</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <!---admin page-->
                 <section id="adminSection" class="section">
                     <div class="section-header">

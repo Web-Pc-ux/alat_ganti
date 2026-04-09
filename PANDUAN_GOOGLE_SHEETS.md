@@ -18,7 +18,8 @@ const INITIAL_STRUCTURE = {
   'kategori': ['id', 'komp1', 'category', 'namamodell', 'quantity', 'hargaunit', 'totalrm', 'notaganti', 'Timestamp'],
   'admin': ['id', 'nama', 'username', 'email', 'jawatan', 'peranan', 'password', 'Timestamp'],
   'tetapan': ['id', 'idle', 'sound', 'volume', 'isMuted', 'gasUrl', 'gasToken', 'logo', 'bg', 'Timestamp'],
-  'penerimaan': ['id', 'vendor', 'jenisModel', 'namaAlatGanti', 'namaModel', 'noSiri', 'tarikhTerima', 'warranty', 'juruteknik', 'status', 'Timestamp']
+  'penerimaan': ['id', 'vendor', 'jenisModel', 'namaAlatGanti', 'namaModel', 'noSiri', 'tarikhTerima', 'warranty', 'juruteknik', 'status', 'Timestamp'],
+  'juruteknik': ['id', 'nama', 'email', 'Timestamp']
 };
 
 /**

@@ -14,6 +14,8 @@ let receivedItems = [];
 let receivedIdCounter = 1;
 let syarikatList = [];
 let syarikatIdCounter = 1;
+let juruteknikList = [];
+let juruteknikIdCounter = 1;
 
 window.addEventListener('load', async () => {
     // Determine if we are in Dashboard or Login
@@ -45,6 +47,7 @@ window.addEventListener('load', async () => {
         setupStockReportListeners();
         setupPenerimaanListeners();
         setupSyarikatListeners();
+        setupJuruteknikListeners();
 
         // Restore UI state from URL hash or localStorage
         let initialSection = window.location.hash.substring(1) || localStorage.getItem('activeSection') || 'dashboard';
@@ -101,12 +104,13 @@ function setupEquipmentListeners() {
         cancelBtn.addEventListener('click', closeModal);
     }
 
-    // Close on outside click
-    modal.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            closeModal();
-        }
-    });
+    // Disable close on outside click so form stays open
+    // modal.addEventListener('click', (event) => {
+    //     if (event.target === modal) {
+    //         closeModal();
+    //     }
+    // });
+
 
     // Event listeners for Auto-Sum
     const qtyInput = document.getElementById('EQuantity');
@@ -151,7 +155,10 @@ function setupRequestModalListeners() {
     const modelSelect = document.getElementById('reqModel');
     const statusSelect = document.getElementById('reqStatus');
 
-    if (!openReqBtn || !modal || !form || !modelSelect || !statusSelect) return;
+    const jenamaSelect = document.getElementById('reqJenama');
+    const itemSelect = document.getElementById('reqRequestItem');
+
+    if (!openReqBtn || !modal || !form || !modelSelect || !statusSelect || !jenamaSelect || !itemSelect) return;
 
     openReqBtn.addEventListener('click', () => {
         modal.classList.add('show');
@@ -168,11 +175,41 @@ function setupRequestModalListeners() {
         // Initial populate with no filter or empty
         updateRequestJenamaOptions();
         updateRequestEquipmentOptions();
+
+        // Disable dependent fields initially for new request
+        jenamaSelect.disabled = true;
+        itemSelect.disabled = true;
+        jenamaSelect.style.cursor = 'not-allowed';
+        itemSelect.style.cursor = 'not-allowed';
     });
+
+    // Function to check and show error if model not selected
+    const handleDependentClick = (e) => {
+        if (!modelSelect.value) {
+            showNotification('⚠️ Sila pilih Model Komputer dahulu.', 'warning');
+            // If it was a click on the select itself (though disabled selects usually don't fire)
+            e.preventDefault();
+        }
+    };
+
+    // Attach to parent to catch clicks even if select is disabled
+    jenamaSelect.parentElement.addEventListener('mousedown', handleDependentClick);
+    itemSelect.parentElement.addEventListener('mousedown', handleDependentClick);
 
     // Add change listener for dynamic filtering
     modelSelect.addEventListener('change', () => {
         const selectedModel = modelSelect.value;
+        if (selectedModel) {
+            jenamaSelect.disabled = false;
+            itemSelect.disabled = false;
+            jenamaSelect.style.cursor = 'pointer';
+            itemSelect.style.cursor = 'pointer';
+        } else {
+            jenamaSelect.disabled = true;
+            itemSelect.disabled = true;
+            jenamaSelect.style.cursor = 'not-allowed';
+            itemSelect.style.cursor = 'not-allowed';
+        }
         updateRequestJenamaOptions(selectedModel);
         updateRequestEquipmentOptions(selectedModel);
     });
@@ -195,7 +232,8 @@ function setupRequestModalListeners() {
 
     closeBtn?.addEventListener('click', closeRequestModal);
     cancelBtn?.addEventListener('click', closeRequestModal);
-    modal.addEventListener('click', (e) => { if (e.target === modal) closeRequestModal(); });
+    // Disable close on outside click so form stays open
+    // modal.addEventListener('click', (e) => { if (e.target === modal) closeRequestModal(); });
 
     form.addEventListener('submit', handleAddRequest);
 
@@ -275,7 +313,7 @@ function handleAddEquipment(e) {
 // ni dalam grup senarai alat ganti
 function importEquipmentCSV(file) {
     if (!file) {
-        showNotification('⚠️ Pilih fail CSV terlebih dahulu.', 'warning');
+        showNotification('⚠️ Pilih fail CSV terlebih dahulu.', 'warning');
         return;
     }
 
@@ -315,7 +353,7 @@ function importEquipmentCSV(file) {
 // Unified import handler: CSV or XLSX
 // ni pun dalam grop senarai alat ganrti
 function importEquipmentFile(file) {
-    if (!file) { showNotification('⚠️ Pilih fail terlebih dahulu.', 'warning'); return; }
+    if (!file) { showNotification('⚠️ Pilih fail terlebih dahulu.', 'warning'); return; }
     const komp1 = file.komp1.toLowerCase();
     if (komp1.endsWith('.csv')) {
         importEquipmentCSV(file);
@@ -357,13 +395,13 @@ function importEquipmentFile(file) {
                 showNotification(`✓ ${added} baris berhasil diimpor.`, 'success');
             } catch (err) {
                 console.error(err);
-                showNotification('⚠️ Gagal memproses file XLSX.', 'warning');
+                showNotification('⚠️ Gagal memproses file XLSX.', 'warning');
             }
         };
         reader.readAsArrayBuffer(file);
         return;
     }
-    showNotification('⚠️ Format file tidak disokong.', 'warning');
+    showNotification('⚠️ Format file tidak disokong.', 'warning');
 }
 
 // Basic CSV line parser supporting quoted fields
@@ -538,8 +576,8 @@ function displayRequests() {
             <td data-label="Selesai">${r.dateend}</td>
             <td data-label="Tindakan">
                 <div class="action-buttons">
-                    <button class="btn btn-edit" onclick="promptEditRequest(${r.id})">✏️</button>
-                    <button class="btn btn-danger" onclick="deleteRequest(${r.id})">🗑️</button>
+                    <button class="btn btn-edit" onclick="promptEditRequest(${r.id})">✓ï¸</button>
+                    <button class="btn btn-danger" onclick="deleteRequest(${r.id})">🗑️</button>
                 </div>
             </td>
         </tr>
@@ -566,6 +604,14 @@ function promptEditRequest(id) {
     updateRequestJenamaOptions(r.model);
     updateRequestEquipmentOptions(r.model);
 
+    // Enable fields if model is present (it should be when editing)
+    if (r.model) {
+        document.getElementById('reqJenama').disabled = false;
+        document.getElementById('reqRequestItem').disabled = false;
+        document.getElementById('reqJenama').style.cursor = 'pointer';
+        document.getElementById('reqRequestItem').style.cursor = 'pointer';
+    }
+
     document.getElementById('reqJenama').value = r.jenama || '';
     document.getElementById('reqNoSiri').value = r.nosiri || '';
     document.getElementById('reqRequestItem').value = r.Requestitem || '';
@@ -582,7 +628,7 @@ function promptEditRequest(id) {
 
     form.dataset.editingId = id;
     document.getElementById('requestModal').classList.add('show');
-    document.getElementById('requestModalTitle').textContent = '✏️ Edit Permohonan';
+    document.getElementById('requestModalTitle').textContent = '✓ï¸ Edit Permohonan';
     document.body.style.overflow = 'hidden';
 }
 
@@ -630,8 +676,13 @@ function setupEventListeners() {
                 menu.classList.remove('expanded');
                 menu.style.maxHeight = null;
             } else {
-                // Remove existing expanded dropdowns if we want accordion behavior
-                // document.querySelectorAll('.dropdown-menu').forEach(m => { m.classList.remove('expanded'); m.style.maxHeight = null; m.previousElementSibling.classList.remove('active'); });
+                // Remove existing expanded dropdowns for accordion behavior
+                document.querySelectorAll('.dropdown-menu').forEach(m => {
+                    m.classList.remove('expanded');
+                    m.style.maxHeight = null;
+                    const prev = m.previousElementSibling;
+                    if (prev) prev.classList.remove('active');
+                });
 
                 menu.classList.add('expanded');
                 menu.style.maxHeight = menu.scrollHeight + "px";
@@ -782,7 +833,7 @@ function updateRequestEquipmentOptions(filterModel = null) {
 
 function recordExpense(amount) {
     const val = parseFloat(amount) || 0;
-    if (val <= 0) { showNotification('⚠️ Masukkan jumlah yang sah.', 'warning'); return; }
+    if (val <= 0) { showNotification('⚠️ Masukkan jumlah yang sah.', 'warning'); return; }
     budgetUsed = (parseFloat(budgetUsed) || 0) + val;
     saveDataToStorage();
     updateBudgetDisplay();
@@ -1142,7 +1193,7 @@ function generateReport() {
     const inProgressRequests = requests.filter(r => r.status === 'Dalam Proses');
 
     if (inProgressRequests.length === 0) {
-        showNotification('⚠️ Tiada data permohonan "Dalam Proses" untuk laporan.', 'warning');
+        showNotification('⚠️ Tiada data permohonan "Dalam Proses" untuk laporan.', 'warning');
         return;
     }
 
@@ -1207,7 +1258,7 @@ function generateReport() {
     const grandTotalPrice = resA.totalPrice + resB.totalPrice + resC.totalPrice;
 
     // Load saved settings display
-    const currentLogoHTML = reportSettings.logo ? `<img src="${reportSettings.logo}" id="reportLogoPreview" alt="Report Logo" style="width:${reportSettings.logoWidth}px">` : '🏢';
+    const currentLogoHTML = reportSettings.logo ? `<img src="${reportSettings.logo}" id="reportLogoPreview" alt="Report Logo" style="width:${reportSettings.logoWidth}px">` : 'ðŸ¢';
 
     // Sync UI controls with settings
     const fontSelect = document.getElementById('fontFamilySelect');
@@ -1476,7 +1527,7 @@ function setupPenerimaanListeners() {
         scanBtn.addEventListener('click', () => {
             const simulatedQR = "QR-" + Math.random().toString(36).substr(2, 9).toUpperCase();
             document.getElementById('recvSiri').value = simulatedQR;
-            showNotification('📷 QR Scanned: ' + simulatedQR, 'info');
+            showNotification('ðŸ“· QR Scanned: ' + simulatedQR, 'info');
         });
     }
 
@@ -1593,8 +1644,8 @@ function displayReceivedTable() {
             </td>
             <td data-label="Tindakan">
                 <div class="action-buttons">
-                    <button class="btn btn-edit" onclick="editReceived(${item.id})">✏️</button>
-                    <button class="btn btn-danger" onclick="deleteReceived(${item.id})">🗑️</button>
+                    <button class="btn btn-edit" onclick="editReceived(${item.id})">✓ï¸</button>
+                    <button class="btn btn-danger" onclick="deleteReceived(${item.id})">🗑️</button>
                 </div>
             </td>
         </tr>
@@ -1638,7 +1689,7 @@ window.editReceived = function (id) {
     document.getElementById('recvStatus').value = item.status;
 
     form.dataset.editingId = id;
-    document.getElementById('penerimaanModalTitle').textContent = '✏️ Edit Penerimaan';
+    document.getElementById('penerimaanModalTitle').textContent = '✓ï¸ Edit Penerimaan';
 };
 
 window.deleteReceived = function (id) {
@@ -1664,6 +1715,8 @@ function saveDataToStorage() {
     if (typeof computerIdCounter !== 'undefined') localStorage.setItem('computerIdCounter', computerIdCounter);
     if (typeof receivedIdCounter !== 'undefined') localStorage.setItem('receivedIdCounter', receivedIdCounter);
     if (typeof syarikatIdCounter !== 'undefined') localStorage.setItem('syarikatIdCounter', syarikatIdCounter);
+    localStorage.setItem('juruteknikList', JSON.stringify(juruteknikList));
+    if (typeof juruteknikIdCounter !== 'undefined') localStorage.setItem('juruteknikIdCounter', juruteknikIdCounter);
 }
 
 function loadDataFromStorage() {
@@ -1681,7 +1734,11 @@ function loadDataFromStorage() {
         if (localStorage.getItem('receivedIdCounter')) receivedIdCounter = parseInt(localStorage.getItem('receivedIdCounter'));
         if (localStorage.getItem('syarikatIdCounter')) syarikatIdCounter = parseInt(localStorage.getItem('syarikatIdCounter'));
 
+        juruteknikList = JSON.parse(localStorage.getItem('juruteknikList')) || [];
+        if (localStorage.getItem('juruteknikIdCounter')) juruteknikIdCounter = parseInt(localStorage.getItem('juruteknikIdCounter'));
+
         updateSyarikatDropdowns();
+        updateJuruteknikDropdowns();
     } catch (e) {
         console.error("Gagal memuat cache:", e);
     }
@@ -1710,15 +1767,15 @@ async function turboSync(action, sheet, data) {
             body: JSON.stringify(payload)
         });
 
-        console.log(`🚀 TurboSync ${action} pada ${sheet} dihantar ke cloud.`);
+        console.log(`ðŸš€ TurboSync ${action} pada ${sheet} dihantar ke cloud.`);
     } catch (err) {
-        console.error(`❌ TurboSync Gagal: ${action} ${sheet}`, err);
+        console.error(`âŒ TurboSync Gagal: ${action} ${sheet}`, err);
     }
 }
 
 async function turboLoadAll() {
     if (!GS_URL) return;
-    showNotification('🔄 Menghubungkan ke Turbo Engine...', 'info');
+    showNotification('ðŸ”„ Menghubungkan ke Turbo Engine...', 'info');
 
     try {
         // Untuk GET, kita boleh gunakan mode cors biasa
@@ -1750,6 +1807,10 @@ async function turboLoadAll() {
                 syarikatList = cloudData.syarikat;
                 syarikatIdCounter = Math.max(...syarikatList.map(s => parseInt(s.id) || 0)) + 1;
             }
+            if (cloudData.juruteknik && cloudData.juruteknik.length > 0) {
+                juruteknikList = cloudData.juruteknik;
+                juruteknikIdCounter = Math.max(...juruteknikList.map(j => parseInt(j.id) || 0)) + 1;
+            }
 
             // Sync cache with cloud data after load
             saveDataToStorage();
@@ -1761,8 +1822,10 @@ async function turboLoadAll() {
             displayComputerTable();
             displayReceivedTable();
             displaySyarikatTable();
+            displayJuruteknikTable();
+            updateJuruteknikDropdowns();
 
-            showNotification('✅ Data diselaraskan dengan Cloud Turbo.', 'success');
+            showNotification('✓… Data diselaraskan dengan Cloud Turbo.', 'success');
         }
     } catch (err) {
         console.log('TurboLoad status: Offline or partial.');
@@ -1838,8 +1901,8 @@ function displayEquipmentTable(filteredEquipment = equipment) {
             <td data-label="Nota" style="text-align: center;">${item.notaganti}</td>
             <td data-label="Tindakan">
                 <div class="action-buttons">
-                    <button class="btn btn-edit" onclick="editEquipment(${item.id})">✏️ Edit</button>
-                    <button class="btn btn-danger" onclick="deleteEquipment(${item.id})">🗑️ Hapus</button>
+                    <button class="btn btn-edit" onclick="editEquipment(${item.id})">✓ï¸ Edit</button>
+                    <button class="btn btn-danger" onclick="deleteEquipment(${item.id})">🗑️ Hapus</button>
                 </div>
             </td>
         </tr>
@@ -1862,7 +1925,7 @@ function editEquipment(equipmentId) {
         document.getElementById('E_Syarikat').value = item.syarikat || '';
 
         // Change modal title
-        document.getElementById('modalTitle').textContent = '✏️ Edit Peralatan';
+        document.getElementById('modalTitle').textContent = '✓ï¸ Edit Peralatan';
 
         // Store equipment ID for update
         const form = document.getElementById('addEquipmentForm');
@@ -1927,8 +1990,8 @@ function displayComputerTable() {
             <td data-label="Jenama & Model">${item.brandModel}</td>
             <td data-label="Tindakan">
                 <div class="action-buttons">
-                    <button class="btn btn-edit" onclick="editComputer(${item.id})">✏️ Edit</button>
-                    <button class="btn btn-danger" onclick="deleteComputer(${item.id})">🗑️ Hapus</button>
+                    <button class="btn btn-edit" onclick="editComputer(${item.id})">✓ï¸ Edit</button>
+                    <button class="btn btn-danger" onclick="deleteComputer(${item.id})">🗑️ Hapus</button>
                 </div>
             </td>
         </tr>
@@ -2029,7 +2092,7 @@ window.editComputer = function (id) {
         const form = document.getElementById('addComputerForm');
         form.dataset.editingId = id;
 
-        document.getElementById('computerModalTitle').textContent = '✏️ Edit Komputer';
+        document.getElementById('computerModalTitle').textContent = '✓ï¸ Edit Komputer';
 
         const modal = document.getElementById('computerModal');
         modal.classList.add('show');
@@ -2112,12 +2175,12 @@ window.deleteRequest = function (id) {
 
 // Initialize Computer List logic on load
 function setupConfirmationModalListeners() {
-    // Close confirmation modal on outside click
+    // Close confirmation modal on outside click (disabled per user request)
     const confModal = document.getElementById('confirmationModal');
     if (confModal) {
-        confModal.addEventListener('click', (e) => {
-            if (e.target === confModal) closeConfirmationModal();
-        });
+        // confModal.addEventListener('click', (e) => {
+        //     if (e.target === confModal) closeConfirmationModal();
+        // });
     }
 }
 
@@ -2232,7 +2295,7 @@ function printStockReport() {
     const summaryCards = document.getElementById('stockSummaryCards');
 
     if (!reportTable || reportTable.querySelector('.empty-row')) {
-        showNotification('⚠️ Sila jana laporan terlebih dahulu!', 'warning');
+        showNotification('⚠️ Sila jana laporan terlebih dahulu!', 'warning');
         return;
     }
 
@@ -2323,22 +2386,22 @@ function printStockReport() {
         </head>
         <body>
             <div class="header">
-                <h1>📊 LAPORAN STOK ALAT GANTI</h1>
+                <h1>ðŸ“Š LAPORAN STOK ALAT GANTI</h1>
                 <p>Sistem Pengurusan Inventori Dan Kewangan</p>
                 <p>Tarikh: ${currentDate}</p>
             </div>
 
             <div class="summary">
                 <div class="summary-card">
-                    <h3>📦 Jumlah Item</h3>
+                    <h3>ðŸ“¦ Jumlah Item</h3>
                     <div class="value">${document.getElementById('totalItemsCount').textContent}</div>
                 </div>
                 <div class="summary-card">
-                    <h3>⚠️ Stok Kritikal</h3>
+                    <h3>⚠️ Stok Kritikal</h3>
                     <div class="value">${document.getElementById('criticalStockCount').textContent}</div>
                 </div>
                 <div class="summary-card">
-                    <h3>✅ Stok Mencukupi</h3>
+                    <h3>✓… Stok Mencukupi</h3>
                     <div class="value">${document.getElementById('healthyStockCount').textContent}</div>
                 </div>
             </div>
@@ -2346,7 +2409,7 @@ function printStockReport() {
             ${reportTable.outerHTML}
 
             <div class="footer">
-                <p>© 2026 Dashboard Alat Ganti Komputer | Dicetak pada ${new Date().toLocaleString('ms-MY')}</p>
+                <p>Â© 2026 Dashboard Alat Ganti Komputer | Sistem Pengurusan Inventori Alat Ganti Komputer | Dicetak pada ${new Date().toLocaleString('ms-MY')}</p>
             </div>
         </body>
         </html>
@@ -2600,8 +2663,8 @@ function displaySyarikatTable() {
             <td data-label="Bajet">RM ${item.bajet.toLocaleString('ms-MY', { minimumFractionDigits: 2 })}</td>
             <td data-label="Tindakan">
                 <div class="action-buttons">
-                    <button class="btn btn-edit" onclick="editSyarikat(${item.id})">✏️</button>
-                    <button class="btn btn-danger" onclick="deleteSyarikat(${item.id})">🗑️</button>
+                    <button class="btn btn-edit" onclick="editSyarikat(${item.id})">✓ï¸</button>
+                    <button class="btn btn-danger" onclick="deleteSyarikat(${item.id})">🗑️</button>
                 </div>
             </td>
         </tr>
@@ -2627,7 +2690,7 @@ window.editSyarikat = function (id) {
     document.getElementById('syarikatBajet').value = item.bajet;
 
     form.dataset.editingId = id;
-    document.getElementById('syarikatModalTitle').textContent = '✏️ Edit Maklumat Syarikat';
+    document.getElementById('syarikatModalTitle').textContent = '✓ï¸ Edit Maklumat Syarikat';
 };
 
 window.deleteSyarikat = function (id) {
@@ -2655,6 +2718,157 @@ function updateSyarikatDropdowns() {
             const option = document.createElement('option');
             option.value = s.namaSyarikat;
             option.textContent = `${s.namaSyarikat} (${s.umsbenID})`;
+            select.appendChild(option);
+        });
+
+        if (currentValue) select.value = currentValue;
+    });
+}
+
+// ==========================================
+// JURUTEKNIK MANAGEMENT
+// ==========================================
+
+function setupJuruteknikListeners() {
+    const modal = document.getElementById('juruteknikModal');
+    const openBtn = document.getElementById('openAddJuruteknikForm');
+    const closeBtn = document.getElementById('closeJuruteknikModal');
+    const cancelBtn = document.getElementById('cancelJuruteknikBtn');
+    const form = document.getElementById('juruteknikForm');
+
+    if (!modal || !form) return;
+
+    if (openBtn) {
+        openBtn.addEventListener('click', () => {
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            form.reset();
+            document.getElementById('juruteknikModalTitle').textContent = '➕ Daftar Juruteknik Baru';
+            delete form.dataset.editingId;
+        });
+    }
+
+    const closeModal = () => {
+        modal.classList.remove('show');
+        document.body.style.overflow = 'auto';
+        form.reset();
+        delete form.dataset.editingId;
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    // modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); }); // Disabled close on outside click so form stays open
+
+    form.addEventListener('submit', handleJuruteknikForm);
+}
+
+function handleJuruteknikForm(e) {
+    e.preventDefault();
+    const form = e.target;
+    const editingId = form.dataset.editingId ? parseInt(form.dataset.editingId) : null;
+
+    const data = {
+        nama: document.getElementById('juruteknikNama').value.trim(),
+        email: document.getElementById('juruteknikEmail').value.trim()
+    };
+
+    if (editingId) {
+        const idx = juruteknikList.findIndex(j => j.id === editingId);
+        if (idx > -1) {
+            juruteknikList[idx] = { ...juruteknikList[idx], ...data };
+            turboSync('update', 'juruteknik', juruteknikList[idx]);
+            showNotification('✓ Maklumat juruteknik dikemaskini.', 'success');
+        }
+    } else {
+        const newItem = {
+            id: juruteknikIdCounter++,
+            ...data
+        };
+        juruteknikList.push(newItem);
+        turboSync('create', 'juruteknik', newItem);
+        showNotification('✓ Juruteknik berjaya didaftarkan!', 'success');
+    }
+
+    saveDataToStorage();
+    displayJuruteknikTable();
+    updateJuruteknikDropdowns();
+
+    const modal = document.getElementById('juruteknikModal');
+    modal.classList.remove('show');
+    document.body.style.overflow = 'auto';
+    form.reset();
+    delete form.dataset.editingId;
+}
+
+function displayJuruteknikTable() {
+    const tbody = document.getElementById('juruteknikTableBody');
+    if (!tbody) return;
+
+    if (juruteknikList.length === 0) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="4" class="text-center">Belum ada data juruteknik.</td></tr>';
+        return;
+    }
+
+    const sorted = [...juruteknikList].sort((a, b) => a.nama.localeCompare(b.nama));
+
+    tbody.innerHTML = sorted.map((item, idx) => `
+        <tr>
+            <td data-label="No">${idx + 1}</td>
+            <td data-label="Nama Juruteknik"><strong>${item.nama}</strong></td>
+            <td data-label="Email">${item.email}</td>
+            <td data-label="Tindakan">
+                <div class="action-buttons">
+                    <button class="btn btn-edit" onclick="editJuruteknik(${item.id})">✓ï¸</button>
+                    <button class="btn btn-danger" onclick="deleteJuruteknik(${item.id})">🗑️</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+window.editJuruteknik = function (id) {
+    const item = juruteknikList.find(j => j.id === id);
+    if (!item) return;
+
+    const modal = document.getElementById('juruteknikModal');
+    const form = document.getElementById('juruteknikForm');
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+
+    document.getElementById('juruteknikNama').value = item.nama;
+    document.getElementById('juruteknikEmail').value = item.email;
+
+    form.dataset.editingId = id;
+    document.getElementById('juruteknikModalTitle').textContent = '✓ï¸ Edit Maklumat Juruteknik';
+};
+
+window.deleteJuruteknik = function (id) {
+    const item = juruteknikList.find(j => j.id === id);
+    if (!item) return;
+
+    showDeleteConfirmation(`Adakah anda pasti mahu memadam "${item.nama}"?`, () => {
+        juruteknikList = juruteknikList.filter(j => j.id !== id);
+        turboSync('delete', 'juruteknik', { id: id });
+        saveDataToStorage();
+        displayJuruteknikTable();
+        updateJuruteknikDropdowns();
+    });
+};
+
+function updateJuruteknikDropdowns() {
+    const dropdowns = ['reqJuruteknik', 'recvTech'];
+    dropdowns.forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">-- Pilih Juruteknik --</option>';
+
+        juruteknikList.forEach(j => {
+            const option = document.createElement('option');
+            option.value = j.nama;
+            option.textContent = j.nama;
             select.appendChild(option);
         });
 
