@@ -1,6 +1,6 @@
 // Cloud Configuration (Turbo Engine v5.3 Style)
 const GS_URL = "https://script.google.com/macros/s/AKfycbx0SJ_R7PmUIo4fiA2Nz8kmU2ye49kWYYdElB6yx6TbxnsUHqPbPD0bjvI3sRGWAmVHdw/exec";
-const AUTH_TOKEN = "MASUKKAN_TOKEN_DISINI";
+const AUTH_TOKEN = "CHRIS_SHEETS_KEY_2026";
 
 // Data Stores
 let equipment = [];
@@ -33,6 +33,7 @@ window.addEventListener('load', async () => {
         displayComputerTable();
         displayReceivedTable();
         displaySyarikatTable();
+        displayJuruteknikTable();
         updateRequestJenamaOptions();
         updateRequestEquipmentOptions();
 
@@ -61,6 +62,7 @@ window.addEventListener('load', async () => {
             // Reload UI components that need fresh data after cloud sync finishes
             updateRequestJenamaOptions();
             updateRequestEquipmentOptions();
+            displayJuruteknikTable();
         });
     }
 });
@@ -1825,7 +1827,7 @@ async function turboLoadAll() {
             displayJuruteknikTable();
             updateJuruteknikDropdowns();
 
-            showNotification('✓… Data diselaraskan dengan Cloud Turbo.', 'success');
+            showNotification('✅ Data diselaraskan dengan Cloud Turbo.', 'success');
         }
     } catch (err) {
         console.log('TurboLoad status: Offline or partial.');
