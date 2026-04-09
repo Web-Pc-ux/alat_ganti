@@ -1780,9 +1780,17 @@ async function turboLoadAll() {
     showNotification('ðŸ”„ Menghubungkan ke Turbo Engine...', 'info');
 
     try {
-        // Untuk GET, kita boleh gunakan mode cors biasa
+        // Gunakan mode cors dan redirect follow untuk Google Apps Script
         const fullUrl = `${GS_URL}?token=${encodeURIComponent(AUTH_TOKEN)}&action=read&sheet=all`;
-        const response = await fetch(fullUrl);
+        const response = await fetch(fullUrl, {
+            method: 'GET',
+            redirect: 'follow'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const result = await response.json();
 
         if (result.status === 'success') {
@@ -1828,9 +1836,12 @@ async function turboLoadAll() {
             updateJuruteknikDropdowns();
 
             showNotification('✅ Data diselaraskan dengan Cloud Turbo.', 'success');
+        } else {
+            showNotification('⚠️ Cloud: ' + (result.message || 'Ralat tidak diketahui'), 'warning');
         }
     } catch (err) {
-        console.log('TurboLoad status: Offline or partial.');
+        console.error('TurboLoad Failure:', err);
+        showNotification('❌ Gagal menyelaraskan dengan Cloud. Sila semak sambungan Internet atau Token.', 'warning');
     }
 }
 
