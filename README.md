@@ -1,1 +1,2 @@
-(https://web-pc-ux.github.io/alat_ganti/)
+
+https://udin9.github.io/alat_ganti/
