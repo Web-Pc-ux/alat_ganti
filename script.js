@@ -579,8 +579,8 @@ function displayRequests() {
             <td data-label="Selesai">${r.dateend}</td>
             <td data-label="Tindakan">
                 <div class="action-buttons">
-                    <button class="btn btn-edit" onclick="promptEditRequest(${r.id})">✏️ï¸</button>
-                    <button class="btn btn-danger" onclick="deleteRequest(${r.id})">🗑️</button>
+                    <button class="btn btn-edit" onclick="promptEditRequest(${r.id})">✏️</button>
+                    <button class="btn btn-danger" onclick="deleteRequest(${r.id})">🗑️</button>
                 </div>
             </td>
         </tr>
@@ -631,7 +631,7 @@ function promptEditRequest(id) {
 
     form.dataset.editingId = id;
     document.getElementById('requestModal').classList.add('show');
-    document.getElementById('requestModalTitle').textContent = '✓ï¸ Edit Permohonan';
+    document.getElementById('requestModalTitle').textContent = '✅ Edit Permohonan';
     document.body.style.overflow = 'hidden';
 }
 
@@ -836,7 +836,7 @@ function updateRequestEquipmentOptions(filterModel = null) {
 
 function recordExpense(amount) {
     const val = parseFloat(amount) || 0;
-    if (val <= 0) { showNotification('⚠️ Masukkan jumlah yang sah.', 'warning'); return; }
+    if (val <= 0) { showNotification('⚠️  Masukkan jumlah yang sah.', 'warning'); return; }
     budgetUsed = (parseFloat(budgetUsed) || 0) + val;
     saveDataToStorage();
     updateBudgetDisplay();
@@ -1113,6 +1113,54 @@ function setupReportListeners() {
         setSelectionFontSize(e.target.value);
     });
 
+    // Laporan A4 Button
+    document.getElementById('laporanA4Btn')?.addEventListener('click', () => {
+        const reportContent = document.getElementById('reportEditableArea').innerHTML;
+        const printWindow = window.open('', '_blank');
+
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Laporan Alat Ganti</title>
+                <link rel="stylesheet" href="style.css">
+                <style>
+                    * { box-sizing: border-box; }
+                    body { background: white !important; margin: 0; padding: 0; }
+                    .report-page { 
+                        box-shadow: none !important; 
+                        margin: 0 !important; 
+                        width: 210mm !important; 
+                        padding: 20mm !important;
+                        border: none !important;
+                    }
+                    @media print {
+                        @page { margin: 0; size: A4 portrait; }
+                        body { padding: 0; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="report-editable-container" style="background:white; padding:0;">
+                    ${reportContent}
+                </div>
+                <script>
+                    // Remove interactive elements
+                    document.querySelectorAll('.resizer, .logo-wrapper::before, .logo-wrapper::after').forEach(el => el.remove());
+                    document.querySelectorAll('.logo-wrapper').forEach(el => {
+                        el.style.border = 'none';
+                    });
+                    
+                    window.onload = function() {
+                        window.print();
+                    };
+                <\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    });
+
     // Final Print Button (Simplified Restore)
     document.getElementById('confirmPrintBtn')?.addEventListener('click', () => {
         // Deselect logo and blur to hide handles/cursors
@@ -1169,7 +1217,7 @@ function modifySelectionFontSize(delta) {
         currentSize = Math.round(currentSize * 0.75); // px to pt
     }
 
-    const newSize = Math.max(6, currentSize + delta);
+    const newSize = Math.max(1, currentSize + delta);
     setSelectionFontSize(newSize);
 
     // Sync the input field
@@ -1196,7 +1244,7 @@ function generateReport() {
     const inProgressRequests = requests.filter(r => r.status === 'Dalam Proses');
 
     if (inProgressRequests.length === 0) {
-        showNotification('⚠️ Tiada data permohonan "Dalam Proses" untuk laporan.', 'warning');
+        showNotification('⚠️  Tiada data permohonan "Dalam Proses" untuk laporan.', 'warning');
         return;
     }
 
@@ -1261,7 +1309,7 @@ function generateReport() {
     const grandTotalPrice = resA.totalPrice + resB.totalPrice + resC.totalPrice;
 
     // Load saved settings display
-    const currentLogoHTML = reportSettings.logo ? `<img src="${reportSettings.logo}" id="reportLogoPreview" alt="Report Logo" style="width:${reportSettings.logoWidth}px">` : 'ðŸ¢';
+    const currentLogoHTML = reportSettings.logo ? `<img src="${reportSettings.logo}" id="reportLogoPreview" alt="Report Logo" style="width:${reportSettings.logoWidth}px">` : '🏢';
 
     // Sync UI controls with settings
     const fontSelect = document.getElementById('fontFamilySelect');
@@ -1279,42 +1327,61 @@ function generateReport() {
     // Use saved header or default
     const headerHTML = reportSettings.customHeaderHTML || `
                 <div id="reportLogoArea" class="report-logo-placeholder">${currentLogoHTML}</div>
-                <div class="report-title" contenteditable="true">Borang Permohonan Alat ganti bagi tujuan penyelenggaraan computer</div>
-                <div class="report-subtitle" contenteditable="true">Pembekal dilantik : RONY SDN BHD</div>
+                <div class="report-title" contenteditable="true">BORANG PERMOHONAN ALAT GANTI BAGI TUJUAN PENYELENGGARAAN KOMPUTER UMS UMS/BEN/S2/2025 (100) JADUAL A, JADUAL B DAN JADUAL C</div>
+                <div class="report-subtitle" contenteditable="true" style="text-align: left; margin-top: 15px;">Pembekal Dilantik : DATATECHNET</div>
     `;
 
     // Use saved signatures or default
     const signatureHTML = reportSettings.customSignatureHTML || `
                 <div class="signature-block">
-                    <div>Disediakan oleh</div>
-                    <div class="signature-line"></div>
+                    <div style="font-weight: bold; margin-bottom: 40px;">Disediakan Oleh;</div>
                     <div class="signature-details">
-                        <span>Nama: </span>
-                        <span>Jawatan: </span>
-                        <span>Cop: </span>
-                        <span>Tarikh: </span>
+                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Nama</span> <span>: _______________________</span></div>
+                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Jawatan</span> <span>: </span></div>
+                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Cop</span> <span>: </span></div>
+                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Tarikh</span> <span>: </span></div>
                     </div>
                 </div>
                 <div class="signature-block">
-                    <div>Disemak oleh</div>
-                    <div class="signature-line"></div>
+                    <div style="font-weight: bold; margin-bottom: 40px;">Disemak Oleh;</div>
                     <div class="signature-details">
-                        <span>Nama: </span>
-                        <span>Jawatan: </span>
-                        <span>Cop: </span>
-                        <span>Tarikh: </span>
+                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Nama</span> <span>: _______________________</span></div>
+                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Jawatan</span> <span>: </span></div>
+                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Cop</span> <span>: </span></div>
+                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Tarikh</span> <span>: </span></div>
                     </div>
                 </div>
                 <div class="signature-block">
-                    <div>Disahkan oleh</div>
-                    <div class="signature-line"></div>
+                    <div style="font-weight: bold; margin-bottom: 40px;">Disahkan Oleh;</div>
                     <div class="signature-details">
-                        <span>Nama: </span>
-                        <span>Jawatan: </span>
-                        <span>Cop: </span>
-                        <span>Tarikh: </span>
+                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Nama</span> <span>: _______________________</span></div>
+                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Jawatan</span> <span>: </span></div>
+                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Cop</span> <span>: </span></div>
+                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Tarikh</span> <span>: </span></div>
                     </div>
                 </div>
+    `;
+
+    // ADDED: Contractor Section dedicated string
+    const contractorHTML = `
+            <div style="margin-top:40px; margin-bottom: 20px; text-align:center; position: relative;">
+                <div style="border-top: 1px dashed #000; width: 100%; position: absolute; top: 50%; z-index: 1;"></div>
+                <span style="background: #fff; padding: 0 15px; position: relative; z-index: 2; font-weight: bold; font-size: 10pt;">BAHAGIAN KONTRAKTOR</span>
+            </div>
+            <div style="font-size: 9pt; margin-bottom: 15px;">
+                Pengesahan penerimaan borang permohonan JTMK kepada Pembekal pada tarikh : _______________________
+            </div>
+            <div style="margin-top:10px; font-weight:bold; font-size:9pt;">
+                Diterima Oleh;
+            </div>
+            <div class="signature-block" style="margin-top:10px; width:40%;">
+                <div class="signature-details">
+                    <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Nama</span> <span>: _______________________</span></div>
+                    <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Jawatan</span> <span>: </span></div>
+                    <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Cop</span> <span>: </span></div>
+                    <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Tarikh</span> <span>: </span></div>
+                </div>
+            </div>
     `;
 
     editableArea.innerHTML = `
@@ -1323,7 +1390,7 @@ function generateReport() {
                 ${headerHTML}
             </div>
 
-            <div class="report-info">MAKLUMAT PERMOHONAN ALAT GANTI</div>
+            <div class="report-info" contenteditable="true" style="text-align: left; text-decoration: none; margin: 30px 0 15px 0;">MAKLUMAT PERMOHONAN ALAT GANTI UMS/BEN/S2/2025 (100) KALI KE-</div>
 
             ${jadualA.length > 0 ? `
             <div class="report-section">
@@ -1343,7 +1410,7 @@ function generateReport() {
                         <tr class="report-total-row">
                             <td colspan="2" class="text-right">Jumlah Kuantiti</td>
                             <td class="text-center">${resA.totalQty}</td>
-                            <td colspan="0" class="text-right">Jumlah</td>
+                            <td class="text-right">Jumlah</td>
                             <td class="text-right">RM ${resA.totalPrice.toFixed(2)}</td>
                         </tr>
                     </tbody>
@@ -1368,7 +1435,7 @@ function generateReport() {
                         <tr class="report-total-row">
                             <td colspan="2" class="text-right">Jumlah Kuantiti</td>
                             <td class="text-center">${resB.totalQty}</td>
-                            <td colspan="0" class="text-right">Jumlah</td>
+                            <td class="text-right">Jumlah</td>
                             <td class="text-right">RM ${resB.totalPrice.toFixed(2)}</td>
                         </tr>
                     </tbody>
@@ -1393,7 +1460,7 @@ function generateReport() {
                         <tr class="report-total-row">
                             <td colspan="2" class="text-right">Jumlah Kuantiti</td>
                             <td class="text-center">${resC.totalQty}</td>
-                            <td colspan="0" class="text-right">Jumlah</td>
+                            <td class="text-right">Jumlah</td>
                             <td class="text-right">RM ${resC.totalPrice.toFixed(2)}</td>
                         </tr>
                     </tbody>
@@ -1401,23 +1468,34 @@ function generateReport() {
             </div>` : ''}
 
             <div class="report-grand-total">
-                <table class="report-table" style="margin-bottom:0; border:none;">
-                    <tr style="border:none;">
-                        <td style="border:none; font-weight:bold;" width="60%">JUMLAH KUANTITI BAGI JADUAL A, B, DAN C</td>
-                        <td style="border:none; font-weight:bold; text-align:center;" width="10%">${grandTotalQty}</td>
-                        <td style="border:none; font-weight:bold;" width="15%">JUMLAH HARGA BAGI A, B, DAN C</td>
-                        <td style="border:none; font-weight:bold; text-align:right;" width="15%">RM ${grandTotalPrice.toFixed(2)}</td>
+                <table class="report-table-grand">
+                    <tr>
+                        <td width="30%">
+                            <strong>Jumlah Kuantiti bagi Jadual A Dan Jadual B</strong>
+                        </td>
+                        <td width="10%" class="text-center">
+                            <strong>${resA.totalQty + resB.totalQty}</strong>
+                        </td>
+                        <td width="30%">
+                           <strong>Jumlah harga keseluruhan bagi Jadual A Dan Jadual B</strong>
+                        </td>
+                        <td width="30%" class="text-right">
+                            <strong>RM ${(resA.totalPrice + resB.totalPrice).toFixed(2)}</strong>
+                        </td>
                     </tr>
                 </table>
             </div>
 
-            <div style="margin-top:30px; border-top:1px dashed #ccc; padding-top:10px; font-size:9pt; text-align:center; color:#666;">
-                -- BAHAGIAN DIGITAL SIGN --
+            <div style="margin-top:60px; margin-bottom: 20px; text-align:center; position: relative;">
+                <div style="border-top: 1px dashed #000; width: 100%; position: absolute; top: 50%; z-index: 1;"></div>
+                <span style="background: #fff; padding: 0 15px; position: relative; z-index: 2; font-weight: bold; font-size: 10pt;">BAHAGIAN JTMK</span>
             </div>
 
             <div class="report-signature-container">
                 ${signatureHTML}
             </div>
+
+            ${contractorHTML}
         </div>
     `;
 
