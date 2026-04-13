@@ -1,368 +1,424 @@
 <!DOCTYPE html>
 <html lang="ms">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Borang Permohonan Alat Ganti</title>
+    <title>Borang Permohonan Alat Ganti UMS - Exact Layout</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f5f5f5;
+            background-color: #525659;
             margin: 0;
-            padding: 0;
-            color: #000;
+            padding: 20px 0;
+            font-family: Arial, sans-serif;
+            min-width: 850px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .report-page {
+        .a4-container {
             width: 210mm;
-            min-height: 297mm;
-            padding: 20mm;
-            margin: 20px auto;
+            height: 297mm;
             background: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 10mm 15mm;
             box-sizing: border-box;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
             position: relative;
         }
 
-        @media print {
-            body { background: none; margin: 0; padding: 0; }
-            .report-page { margin: 0; box-shadow: none; width: 100%; height: 100%; padding: 15mm; }
-            .no-print { display: none; }
-        }
-
+        /* HEADER - Teks memanjang ke hujung */
         .header {
             text-align: center;
             margin-bottom: 20px;
+
         }
 
-        .logo {
-            max-width: 120px;
-            margin-bottom: 10px;
-        }
 
-        .title {
-            font-size: 11pt;
+        .header-texts {
+            font-size: 13px;
             font-weight: bold;
             text-transform: uppercase;
-            line-height: 1.5;
-            margin-bottom: 20px;
+            width: 100%;
+            white-space: nowrap;
+            overflow: false;
+            text-overflow: ellipsis;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            /* Added this */
+            margin: 0 auto;
+            /* Center the container */
+            display: block;
+        }
+
+        .header-texts p {
+            margin: 0 0 8px 0;
+            /* bottom margin for spacing */
+        }
+
+
+
+
+        .logo-circle {
+            width: 100px;
+            height: 100px;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-circle img {
+            width: 85%;
+            height: auto;
+        }
+
+        .header-title {
+            font-size: 13px;
+            font-weight: bold;
+            line-height: 1.4;
+            text-transform: uppercase;
+            width: 100%;
+            /* Memastikan teks menggunakan ruang sepenuhnya */
+            display: block;
         }
 
         .info-section {
-            font-size: 9pt;
-            margin-bottom: 15px;
+            font-size: 11px;
+            font-weight: bold;
+            margin: 20px 0;
+            line-height: 1.8;
+        }
+
+        /* JADUAL */
+        h3 {
+            font-size: 11px;
+            margin: 15px 0 5px 0;
             font-weight: bold;
         }
 
-        .report-table {
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            font-size: 10px;
+            table-layout: fixed;
         }
 
-        .report-table th, .report-table td {
-            border: 1px solid black;
-            padding: 5px 8px;
-            font-size: 8.5pt;
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 4px;
         }
 
-        .report-table th {
-            background-color: #d1d5db;
+        th {
+            background-color: #e2e2e2;
+        }
+
+        .text-center {
             text-align: center;
-            font-weight: bold;
-            text-transform: uppercase;
         }
 
-        .total-row {
-            font-weight: bold;
-            background-color: #fff;
+        .text-right {
+            text-align: right;
         }
 
-        .grand-total-container {
+        /* KOTAK RUMUSAN DOUBLE BORDER */
+        .summary-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+
+        .summary-table {
             width: 100%;
-            margin-top: 10px;
+            border: 2px solid #000;
         }
 
-        .grand-total-table {
-            width: 100%;
-            border-collapse: collapse;
-            border: 2px solid black;
+        .summary-table td {
+            font-weight: bold;
+            padding: 8px;
+            font-size: 10px;
         }
 
-        .grand-total-table td {
-            border: 1px solid black;
-            padding: 10px;
-            font-size: 9pt;
-            vertical-align: middle;
-        }
-
+        /* BAHAGIAN PENGESAHAN */
         .divider {
+            border-top: 1px dashed #000;
             margin: 30px 0 15px 0;
             text-align: center;
-            position: relative;
-        }
-
-        .divider::before {
-            content: "";
-            border-top: 1px dashed black;
-            width: 100%;
-            position: absolute;
-            top: 50%;
-            left: 0;
-            z-index: 1;
+            font-weight: bold;
+            font-size: 11px;
         }
 
         .divider span {
-            background: white;
+            background: #fff;
             padding: 0 10px;
             position: relative;
-            z-index: 2;
-            font-size: 9pt;
-            font-weight: bold;
+            top: -10px;
         }
 
-        .signature-container {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
+        .sig-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
         }
 
-        .signature-block {
+        .sig-box {
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .sig-line {
+            border-bottom: 1px solid #000;
+            margin: 30px 0 10px 0;
+            width: 80%;
+        }
+
+        .sig-line1 {
+            border-bottom: 1px solid #000;
+            margin: 30px 0 10px 0;
             width: 30%;
-            font-size: 9pt;
         }
 
-        .signature-details {
-            margin-top: 40px;
+        /* PRINT BUTTON */
+        .btn-print {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            cursor: pointer;
+            z-index: 1000;
         }
 
-        .signature-label {
-            display: inline-block;
-            width: 50px;
-        }
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                min-width: 0;
+            }
 
-        .footer-note {
-            font-size: 9pt;
-            margin-top: 15px;
+            .a4-container {
+                box-shadow: none;
+                border: none;
+                width: 100%;
+                margin: 0;
+            }
+
+            .btn-print {
+                display: none;
+            }
         }
     </style>
 </head>
+
 <body>
 
-    <div class="report-page">
-        <!-- Header Section -->
+    <button class="btn-print" onclick="window.print()">Cetak Borang</button>
+
+    <div class="a4-container">
+
         <div class="header">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/4/4b/Logo_UMS_SABAH.png" alt="UMS Logo" class="logo">
-            <div class="title">
-                BORANG PERMOHONAN ALAT GANTI BAGI TUJUAN PENYELENGGARAAN KOMPUTER UMS UMS/BEN/S2/2025 (100)<br>
-                JADUAL A, JADUAL B DAN JADUAL C
+            <div class="logo-circle">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/a/ad/Logo_UMS_Official.png" alt="Logo UMS">
             </div>
+
+            <div class="header-texts">
+                <p>BORANG PERMOHONAN ALAT GANTI BAGI TUJUAN PENYELENGGARAAN KOMPUTER UMS UMS/BEN/S2/2022(12)</p>
+                <p>JADUAL A, JADUAL B DAN JADUAL C</p>
+            </div>
+
         </div>
+
 
         <div class="info-section">
-            Pembekal Dilantik : DATATECHNET
+            Pembekal Dilantik : DATACODE INFORMATION SYSTEM <br><br>
+            MAKLUMAT PERMOHONAN ALAT GANTI UMS/BEN/S2/2022(12) KALI KE-21
         </div>
 
-        <div class="info-section" style="text-decoration: underline;">
-            MAKLUMAT PERMOHONAN ALAT GANTI UMS/BEN/S2/2025 (100) KALI KE-
-        </div>
-
-        <!-- Jadual A -->
-        <div class="info-section" style="margin-top:20px;">
-            Permohonan bagi Jadual A (Alat ganti bagi perkakasan komputer meja)
-        </div>
-        <table class="report-table">
+        <h3>Permohonan bagi Jadual A (Alat ganti bagi perkakasan komputer meja)</h3>
+        <table>
             <thead>
                 <tr>
-                    <th width="8%">NO.</th>
-                    <th width="52%">DESKRIPSI</th>
-                    <th width="10%">KUANTITI</th>
-                    <th width="15%">HARGA SEUNIT (RM)</th>
-                    <th width="15%">JUMLAH (RM)</th>
+                    <th style="width: 40px;">NO.</th>
+                    <th>DESKRIPSI</th>
+                    <th style="width: 80px;">KUANTITI</th>
+                    <th style="width: 120px;">HARGA SEUNIT (RM)</th>
+                    <th style="width: 120px;">JUMLAH (RM)</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td align="center">1</td>
-                    <td>HARDISK SSD</td>
-                    <td align="center">0</td>
-                    <td align="right">RM 188.00</td>
-                    <td align="right">RM 0.00</td>
+                    <td class="text-center">1</td>
+                    <td>MAIN/MOTHERBOARD DELL OPTIPLEX 9020</td>
+                    <td class="text-center">1</td>
+                    <td class="text-right">RM 427.50</td>
+                    <td class="text-right">RM 427.50</td>
                 </tr>
                 <tr>
-                    <td align="center">2</td>
-                    <td></td>
-                    <td align="center"></td>
-                    <td align="right">RM 0.00</td>
-                    <td align="right">RM 0.00</td>
+                    <td class="text-center">2</td>
+                    <td>POWER SUPPLY DELL OPTIPLEX 3046</td>
+                    <td class="text-center">3</td>
+                    <td class="text-right">RM 272.50</td>
+                    <td class="text-right">RM 817.50</td>
                 </tr>
-                <tr class="total-row">
-                    <td colspan="2" align="right">Jumlah Kuantiti</td>
-                    <td align="center">0</td>
-                    <td align="right">Jumlah</td>
-                    <td align="right">RM 0.00</td>
+                <tr>
+                    <td class="text-center">3</td>
+                    <td>POWER SUPPLY DELL OPTIPLEX 9020</td>
+                    <td class="text-center">4</td>
+                    <td class="text-right">RM 272.50</td>
+                    <td class="text-right">RM 1,090.00</td>
                 </tr>
             </tbody>
+            <tfoot>
+                <tr style="font-weight:bold;">
+                    <td colspan="2" class="text-right">Jumlah Kuantiti</td>
+                    <td class="text-center">8</td>
+                    <td class="text-right">Jumlah</td>
+                    <td class="text-right">RM 2,335.00</td>
+                </tr>
+            </tfoot>
         </table>
 
-        <!-- Jadual B -->
-        <div class="info-section" style="margin-top:20px;">
-            Permohonan bagi Jadual B (Alat ganti bagi perkakasan Laptop / Notebook)
-        </div>
-        <table class="report-table">
+        <h3>Permohonan bagi Jadual B (Alat ganti bagi perkakasan Laptop / Notebook)</h3>
+        <table>
             <thead>
                 <tr>
-                    <th width="8%">NO.</th>
-                    <th width="52%">DESKRIPSI</th>
-                    <th width="10%">KUANTITI</th>
-                    <th width="15%">HARGA SEUNIT (RM)</th>
-                    <th width="15%">JUMLAH (RM)</th>
+                    <th style="width: 30px;">NO.</th>
+                    <th>DESKRIPSI</th>
+                    <th style="width: 80px;">KUANTITI</th>
+                    <th style="width: 120px;">HARGA SEUNIT (RM)</th>
+                    <th style="width: 120px;">JUMLAH (RM)</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td align="center">1</td>
-                    <td>PCIe NVMe M.2 SSD DELL LATITUDE 3400</td>
-                    <td align="center">10</td>
-                    <td align="right">RM 188.00</td>
-                    <td align="right">RM 1,880.00</td>
+                    <td class="text-center">1</td>
+                    <td>MAIN/MOTHERBOARD HP PROBOOK 430G1</td>
+                    <td class="text-center">3</td>
+                    <td class="text-right">RM 1,772.00</td>
+                    <td class="text-right">RM 5,316.00</td>
                 </tr>
                 <tr>
-                    <td align="center">2</td>
-                    <td></td>
-                    <td align="center"></td>
-                    <td align="right">RM 0.00</td>
-                    <td align="right">RM 0.00</td>
+                    <td class="text-center">2</td>
+                    <td>BATERI DELL LATITUDE 3400</td>
+                    <td class="text-center">3</td>
+                    <td class="text-right">RM 237.50</td>
+                    <td class="text-right">RM 712.50</td>
                 </tr>
-                <tr class="total-row">
-                    <td colspan="2" align="right">Jumlah Kuantiti</td>
-                    <td align="center">10</td>
-                    <td align="right">Jumlah</td>
-                    <td align="right">RM 1,880.00</td>
+                <tr>
+                    <td class="text-center">3</td>
+                    <td>LAPTOP LCD PANEL HP PROBOOK 430G1</td>
+                    <td class="text-center">2</td>
+                    <td class="text-right">RM 501.50</td>
+                    <td class="text-right">RM 1,003.00</td>
+                </tr>
+                <tr>
+                    <td class="text-center">4</td>
+                    <td>LAPTOP LCD PANEL DELL LATITUDE E5430</td>
+                    <td class="text-center">1</td>
+                    <td class="text-right">RM 501.50</td>
+                    <td class="text-right">RM 501.50</td>
                 </tr>
             </tbody>
+            <tfoot>
+                <tr style="font-weight:bold;">
+                    <td colspan="2" class="text-right">Jumlah Kuantiti</td>
+                    <td class="text-center">9</td>
+                    <td class="text-right">Jumlah</td>
+                    <td class="text-right">RM 7,533.00</td>
+                </tr>
+            </tfoot>
         </table>
 
-        <!-- Jadual C -->
-        <div class="info-section" style="margin-top:20px;">
-            Permohonan bagi Jadual C (Bekalan komponen / Item bahan pakai habis)
-        </div>
-        <table class="report-table">
+        <h3>Permohonan bagi Jadual C (Alat Bahan Pakai Habis)</h3>
+        <table>
             <thead>
                 <tr>
-                    <th width="8%">NO.</th>
-                    <th width="52%">DESKRIPSI</th>
-                    <th width="10%">KUANTITI</th>
-                    <th width="15%">HARGA SEUNIT (RM)</th>
-                    <th width="15%">JUMLAH (RM)</th>
+                    <th style="width: 30px;">NO.</th>
+                    <th>DESKRIPSI</th>
+                    <th style="width: 80px;">KUANTITI</th>
+                    <th style="width: 120px;">HARGA SEUNIT (RM)</th>
+                    <th style="width: 120px;">JUMLAH (RM)</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td align="center">1</td>
-                    <td>THERMAL PASTE 30 GRAM</td>
-                    <td align="center">0</td>
-                    <td align="right">RM22.00</td>
-                    <td align="right">RM 0.00</td>
+                    <td class="text-center">1</td>
+                    <td> auto detect by web list</td>
+                    <td class="text-center">3</td>
+                    <td class="text-right">RM 1,772.00</td>
+                    <td class="text-right">RM 5,316.00</td>
                 </tr>
                 <tr>
-                    <td align="center">2</td>
-                    <td>CMOS BATERI</td>
-                    <td align="center">0</td>
-                    <td align="right">RM12.00</td>
-                    <td align="right">RM 0.00</td>
+                    <td class="text-center">2</td>
+                    <td>BATERI DELL LATITUDE 3400</td>
+                    <td class="text-center">3</td>
+                    <td class="text-right">RM 237.50</td>
+                    <td class="text-right">RM 712.50</td>
                 </tr>
                 <tr>
-                    <td align="center">3</td>
-                    <td>MONITOR 21.5"</td>
-                    <td align="center">0</td>
-                    <td align="right">RM525.00</td>
-                    <td align="right">RM 0.00</td>
-                </tr>
-                <tr class="total-row">
-                    <td colspan="2" align="right">Jumlah Kuantiti</td>
-                    <td align="center">0</td>
-                    <td align="right">Jumlah</td>
-                    <td align="right">RM 0.00</td>
+                    <td class="text-center">3</td>
+                    <td>LAPTOP LCD PANEL HP PROBOOK 430G1</td>
+                    <td class="text-center">2</td>
+                    <td class="text-right">RM 501.50</td>
+                    <td class="text-right">RM 1,003.00</td>
                 </tr>
             </tbody>
+            <tfoot>
+                <tr style="font-weight:bold;">
+                    <td colspan="2" class="text-right">Jumlah Kuantiti</td>
+                    <td class="text-center">9</td>
+                    <td class="text-right">Jumlah</td>
+                    <td class="text-right">RM 7,533.00</td>
+                </tr>
+            </tfoot>
         </table>
 
-        <!-- Grand Total Section -->
-        <div class="grand-total-container">
-            <table class="grand-total-table">
+        <div class="summary-container">
+            <table class="summary-table">
                 <tr>
-                    <td width="30%"><strong>Jumlah Kuantiti bagi Jadual A Dan Jadual B</strong></td>
-                    <td width="10%" align="center"><strong>10</strong></td>
-                    <td width="30%"><strong>Jumlah harga keseluruhan bagi Jadual A Dan Jadual B</strong></td>
-                    <td width="30%" align="right"><strong>RM 1,880.00</strong></td>
+                    <td style="width: 70%;">Jumlah Kuantiti bagi Jadual A, Jadual B dan Jadual C</td>
+                    <td style="width: 40%;" class="text-center">17</td>
+                    <td style="width: 50%;">Jumlah harga keseluruhan bagi Jadual A, Jadual B Dan Jadual C</td>
+                    <td style="width: 35%;" class="text-right">RM 9,868.00</td>
                 </tr>
             </table>
         </div>
 
-        <!-- JTMK Section -->
-        <div class="divider">
-            <span>BAHAGIAN JTMK</span>
-        </div>
-
-        <div class="signature-container">
-            <div class="signature-block">
-                <strong>Disediakan Oleh;</strong>
-                <div class="signature-details">
-                    <div><span class="signature-label">Nama</span> : _________________</div>
-                    <div><span class="signature-label">Jawatan</span> :</div>
-                    <div><span class="signature-label">Cop</span> :</div>
-                    <div><span class="signature-label">Tarikh</span> :</div>
-                </div>
+        <div class="divider"><span>BAHAGIAN JTMK</span></div>
+        <div class="sig-grid">
+            <div class="sig-box">
+                Disediakan Oleh;
+                <div class="sig-line"></div>
+                Nama : <br> Jawatan : <br> Cop : <br> Tarikh :
             </div>
-            <div class="signature-block">
-                <strong>Disemak Oleh;</strong>
-                <div class="signature-details">
-                    <div><span class="signature-label">Nama</span> : _________________</div>
-                    <div><span class="signature-label">Jawatan</span> :</div>
-                    <div><span class="signature-label">Cop</span> :</div>
-                    <div><span class="signature-label">Tarikh</span> :</div>
-                </div>
+            <div class="sig-box">
+                Disemak Oleh;
+                <div class="sig-line"></div>
+                Nama : <br> Jawatan : <br> Cop : <br> Tarikh :
             </div>
-            <div class="signature-block">
-                <strong>Disahkan Oleh;</strong>
-                <div class="signature-details">
-                    <div><span class="signature-label">Nama</span> : _________________</div>
-                    <div><span class="signature-label">Jawatan</span> :</div>
-                    <div><span class="signature-label">Cop</span> :</div>
-                    <div><span class="signature-label">Tarikh</span> :</div>
-                </div>
+            <div class="sig-box">
+                Disahkan Oleh;
+                <div class="sig-line"></div>
+                Nama : <br> Jawatan : <br> Cop : <br> Tarikh :
             </div>
         </div>
 
-        <!-- KONTRAKTOR Section -->
-        <div class="divider" style="margin-top:40px;">
-            <span>BAHAGIAN KONTRAKTOR</span>
+        <div class="divider" style="margin-top:20px;"><span>BAHAGIAN KONTRAKTOR</span></div>
+        <p style="font-size: 13px; margin-bottom: 2px;">Pengesahan penerimaan borang permohonan JTMK kepada Pembekal.
+        </p>
+        <div class="sig-box">
+            <p>Diterima Oleh;
+            <div class="sig-line1"></div>
+            Nama : <br> Jawatan : <br> Cop : <br> Tarikh :
         </div>
 
-        <div class="footer-note">
-            Pengesahan penerimaan borang permohonan JTMK kepada Pembekal pada tarikh : _______________________
-        </div>
-
-        <div style="margin-top:20px; font-weight:bold; font-size:9pt;">
-            Diterima Oleh;
-        </div>
-
-        <div class="signature-block" style="margin-top:10px; width:40%;">
-            <div class="signature-details" style="margin-top:30px;">
-                <div><span class="signature-label">Nama</span> : _________________</div>
-                <div><span class="signature-label">Jawatan</span> :</div>
-                <div><span class="signature-label">Cop</span> :</div>
-                <div><span class="signature-label">Tarikh</span> :</div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Print Button (Only visible on screen) -->
-    <div style="text-align:center; margin-top: 20px;" class="no-print">
-        <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer; background: #3b82f6; color: white; border: none; border-radius: 5px;">Cetak Laporan</button>
     </div>
 
 </body>
+
 </html>

@@ -38,7 +38,7 @@ $maxTry = 50
 $found = $false
 for ($p = $port; $p -le ($port + $maxTry); $p++) {
     $testListener = New-Object System.Net.HttpListener
-    $prefix = "http://127.0.0.1:$p/"
+    $prefix = "http://localhost:$p/"
     try {
         $testListener.Prefixes.Add($prefix)
         $testListener.Start()
@@ -61,6 +61,7 @@ while ($listener.IsListening) {
         $context = $listener.GetContext()
         $request = $context.Request
         $response = $context.Response
+        Write-Host "Request: $($request.HttpMethod) $($request.Url.AbsolutePath)" -ForegroundColor White
 
         $urlPath = $request.Url.AbsolutePath
         if ([string]::IsNullOrEmpty($urlPath) -or $urlPath -eq '/') { $urlPath = '/index.html' }

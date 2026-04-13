@@ -26,46 +26,63 @@
                 <div class="logo"><i class="fas fa-microchip"></i> <span>ALAT GANTI</span></div>
             </div>
             <ul class="nav-menu">
-                <li><a href="#dashboard" class="nav-link active"><i class="fas fa-th-large"></i>
+                <li><a href="#dashboard" class="nav-link active" data-tooltip="Utama"><i class="fas fa-th-large"></i>
                         <span>Dashboard</span></a></li>
-                <li><a href="#requests" class="nav-link"><i class="fas fa-tasks"></i> <span>Permohonan</span></a></li>
+                <li><a href="#requests" class="nav-link" data-tooltip="Permohonan"><i class="fas fa-tasks"></i>
+                        <span>Permohonan</span></a></li>
 
                 <!-- DROPDOWN INVENTORI -->
                 <li class="nav-item-dropdown">
-                    <div class="dropdown-toggle" id="inventoryToggle">
+                    <div class="dropdown-toggle" id="inventoryToggle" data-tooltip="Pengurusan Stok">
                         <i class="fas fa-boxes"></i> <span>Inventori</span>
                         <i class="fas fa-chevron-down dropdown-icon"></i>
                     </div>
                     <ul class="dropdown-menu" id="inventoryMenu">
-                        <li><a href="#equipment-list" class="nav-link"><i class="fas fa-layer-group"></i> <span>Stok
+                        <li><a href="#equipment-list" class="nav-link" data-tooltip="Stok Item"><i
+                                    class="fas fa-layer-group"></i> <span>Stok
                                     Item</span></a></li>
-                        <li><a href="#equipment-listPC" class="nav-link"><i class="fas fa-desktop"></i> <span>Senarai
+                        <li><a href="#equipment-listPC" class="nav-link" data-tooltip="Senarai PC"><i
+                                    class="fas fa-desktop"></i> <span>Senarai
                                     PC</span></a></li>
-                        <li><a href="#penerimaan" class="nav-link"><i class="fas fa-cart-arrow-down"></i>
+                        <li><a href="#penerimaan" class="nav-link" data-tooltip="Penerimaan"><i
+                                    class="fas fa-cart-arrow-down"></i>
                                 <span>Penerimaan</span></a></li>
                     </ul>
                 </li>
 
                 <!-- DROPDOWN PENGURUSAN -->
                 <li class="nav-item-dropdown">
-                    <div class="dropdown-toggle" id="pengurusanToggle">
+                    <div class="dropdown-toggle" id="pengurusanToggle" data-tooltip="Tetapan Sistem">
                         <i class="fas fa-cogs"></i> <span>Pengurusan</span>
                         <i class="fas fa-chevron-down dropdown-icon"></i>
                     </div>
                     <ul class="dropdown-menu" id="pengurusanMenu">
-                        <li><a href="#syarikat" class="nav-link"><i class="fas fa-building"></i>
+                        <li><a href="#syarikat" class="nav-link" data-tooltip="Vendor"><i class="fas fa-building"></i>
                                 <span>Syarikat</span></a></li>
-                        <li><a href="#budget" class="nav-link"><i class="fas fa-chart-pie"></i> <span>Laporan
+                        <li><a href="#budget" class="nav-link" data-tooltip="Laporan"><i class="fas fa-chart-pie"></i>
+                                <span>Laporan
                                     Stok</span></a></li>
-                        <li><a href="#juruteknikSection" class="nav-link"><i class="fas fa-user-tie"></i>
+                        <li><a href="#juruteknikSection" class="nav-link" data-tooltip="Staf"><i
+                                    class="fas fa-user-tie"></i>
                                 <span>Juruteknik</span></a></li>
-                        <li><a href="#adminSection" class="nav-link"><i class="fas fa-user-shield"></i> <span>Pengguna
+                        <li><a href="#adminSection" class="nav-link" data-tooltip="Admin"><i
+                                    class="fas fa-user-shield"></i> <span>Pengguna
                                     (Admin)</span></a></li>
+                        <li><a href="#weatherSection" class="nav-link" data-tooltip="Weather"><i
+                                    class="fas fa-cloud-sun"></i> <span>Cuaca (Weather)</span></a></li>
                     </ul>
                 </li>
             </ul>
             <div class="sidebar-footer">
-                <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> <span>Log
+                <div class="sidebar-weather" id="sidebarWeather">
+                    <div class="sw-icon" id="sw-icon"><i class="fas fa-cloud-sun"></i></div>
+                    <div class="sw-info">
+                        <span class="sw-temp" id="sw-temp">--°C</span>
+                        <span class="sw-city" id="sw-city">Memuatkan...</span>
+                    </div>
+                </div>
+                <button id="logoutBtn" class="logout-btn" data-tooltip="Keluar Sistem"><i
+                        class="fas fa-sign-out-alt"></i> <span>Log
                         Keluar</span></button>
             </div>
         </aside>
@@ -169,8 +186,12 @@
                                 edit / padam.</p>
                         </div>
                         <div class="action-buttons-top">
-                            <button class="btn btn-secondary" id="generateReportBtn">🖨️ Laporan (A4)</button>
-                            <button class="btn btn-primary" id="openRequestForm">➕ Tambah Permohonan</button>
+                            <button class="fab-btn-secondary" id="generateReportBtn" title="Pratonton Laporan (A4)">
+                                <i class="fas fa-print"></i>
+                            </button>
+                            <button class="fab-btn" id="openRequestForm" title="Tambah Permohonan Baru">
+                                <i class="fas fa-plus"></i>
+                            </button>
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -297,8 +318,9 @@
                             <h2>📦 Senarai Alat Ganti Table Dan Kuantiti </h2>
                             <p style="color: #7f8c8d; margin-bottom: 1;">Senarai item alat Ganti komputer .</p>
                         </div>
-                        <button class="btn btn-primary" id="openAddEquipmentForm">➕ Tambah senarai Baru Alat
-                            Ganti</button>
+                        <button class="fab-btn" id="openAddEquipmentForm" title="Tambah Peralatan Baru">
+                            <i class="fas fa-plus"></i>
+                        </button>
                     </div>
 
                     <!--table list area-->
@@ -332,6 +354,51 @@
                         <button class="btn btn-secondary" id="importEquipmentBtn">📤 Import (CSV/XLSX)</button>
                         <small style="color:#7f8c8d;">Format: Model Komputer, Alat Ganti Dipohon, Kuantiti Sebenar
                         </small>
+                    </div>
+                </section>
+
+                <!-- Weather Settings Section -->
+                <section id="weatherSection" class="section">
+                    <div style="margin-bottom: 25px;">
+                        <h2>🌍 Tetapan Cuaca (Weather Settings)</h2>
+                        <p class="subtitle">Konfigurasi lokasi dan paparan cuaca untuk halaman utama sistem</p>
+                    </div>
+
+                    <div class="card"
+                        style="max-width: 650px; background: var(--white); border-radius: 15px; padding: 30px; box-shadow: var(--card-shadow);">
+                        <form id="weatherSettingsForm" class="form-container">
+                            <div class="form-group" style="margin-bottom: 25px;">
+                                <label for="weatherCity"
+                                    style="display:block; margin-bottom: 10px; font-weight: 700;">Bandar / Lokasi (City
+                                    Name) <span class="required">*</span></label>
+                                <input type="text" id="weatherCity" required
+                                    placeholder="Contoh: Kuala Lumpur atau Kota Kinabalu"
+                                    style="width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid var(--glass-border);">
+                                <small style="color: #64748b; margin-top: 5px; display: block;">Masukkan nama bandar
+                                    untuk mendapatkan data cuaca yang tepat.</small>
+                            </div>
+
+                            <div class="form-group"
+                                style="margin-bottom: 25px; display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="weatherShowOnLogin" checked
+                                    style="width: 20px; height: 20px; cursor: pointer;">
+                                <label for="weatherShowOnLogin" style="font-weight: 600; cursor: pointer;">Paparkan
+                                    widget cuaca di Halaman Login</label>
+                            </div>
+
+                            <div
+                                style="background: rgba(59, 130, 246, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 25px; border-left: 4px solid var(--accent);">
+                                <p style="font-size: 0.9rem; color: var(--primary); margin: 0;">
+                                    <strong>Nota:</strong> Data cuaca akan dikemaskini secara automatik menggunakan
+                                    OpenMeteo API. Tiada kunci API diperlukan untuk konfigurasi asas ini.
+                                </p>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary"
+                                style="width: 100%; padding: 15px; font-weight: 700; border-radius: 10px;">
+                                <i class="fas fa-save" style="margin-right: 8px;"></i> Simpan Tetapan Cuaca
+                            </button>
+                        </form>
                     </div>
                 </section>
 
@@ -972,7 +1039,7 @@
 
         <!-- Modal for Editable Report Preview dalam permhonan user-->
         <div id="reportPreviewModal" class="modal">
-            <div class="modal-content report-preview-content" style="max-width: 900px;">
+            <div class="modal-content report-preview-content" style="max-width: 1400px; width: 95%; height: 95vh; display: flex; flex-direction: column;">
                 <div class="modal-header">
                     <h2>🛠️ Edit & Pratonton Laporan</h2>
                     <button class="modal-close" id="closeReportPreview">&times;</button>
@@ -982,11 +1049,9 @@
                     <div class="ribbon-tabs">
                         <button class="ribbon-tab active" onclick="switchRibbonTab('tab-home')">Utama</button>
                         <button class="ribbon-tab" onclick="switchRibbonTab('tab-insert')">Sisipan</button>
-                        <button class="ribbon-tab" onclick="switchRibbonTab('tab-layout')">Tata Letak</button>
+                        <button class="ribbon-tab" onclick="switchRibbonTab('tab-layout')">Layout</button>
                         <div class="ribbon-actions-right">
                             <button class="btn btn-secondary btn-small" id="laporanA4Btn">📄 Laporan A4</button>
-                            <button class="btn btn-secondary btn-small" id="saveReportSettingsBtn">💾 Simpan
-                                Setting</button>
                             <button class="btn btn-primary btn-small" id="confirmPrintBtn">🖨️ Cetak</button>
                         </div>
                     </div>
@@ -996,85 +1061,114 @@
                         <div id="tab-home" class="ribbon-panel active">
                             <div class="toolbar-group">
                                 <span class="toolbar-label">Font</span>
-                                <select id="fontFamilySelect" class="toolbar-select"
-                                    onchange="formatDoc('fontName', this.value)">
-                                    <option value="'Outfit', sans-serif">Outfit (Default)</option>
-                                    <option value="'Inter', sans-serif">Inter</option>
-                                    <option value="'Roboto', sans-serif">Roboto</option>
-                                    <option value="'Times New Roman', Times, serif">Times New Roman</option>
-                                    <option value="'Comic Sans MS', 'Comic Sans', cursive">Comic Sans</option>
-                                    <option value="'Georgia', serif">Georgia</option>
-                                    <option value="'Courier New', monospace">Courier New</option>
-                                </select>
-                                <button class="btn btn-small btn-secondary tool-btn" id="decreaseFontSize"
-                                    title="Kecilkan">-</button>
-                                <input type="number" id="fontSizeInput" class="toolbar-input" value="10" min="1"
-                                    max="100" title="Saiz Font">
-                                <button class="btn btn-small btn-secondary tool-btn" id="increaseFontSize"
-                                    title="Besarkan">+</button>
+                                <div class="toolbar-row">
+                                    <select id="fontFamilySelect" class="toolbar-select"
+                                        onchange="formatDoc('fontName', this.value)">
+                                        <option value="'Outfit', sans-serif">Outfit (Default)</option>
+                                        <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                                        <option value="'Comic Sans MS', cursive">Comic Sans</option>
+                                        <option value="'Arial', sans-serif">Arial</option>
+                                    </select>
+                                    <input type="number" id="fontSizeInput" class="toolbar-input" value="10" min="1"
+                                        max="100">
+                                </div>
+                                <div class="toolbar-row" style="margin-top:5px;">
+                                    <button class="btn btn-small btn-secondary tool-btn"
+                                        onclick="formatDoc('bold')"><b>B</b></button>
+                                    <button class="btn btn-small btn-secondary tool-btn"
+                                        onclick="formatDoc('italic')"><i>I</i></button>
+                                    <button class="btn btn-small btn-secondary tool-btn"
+                                        onclick="formatDoc('underline')"><u>U</u></button>
+                                    <input type="color" onchange="formatDoc('foreColor', this.value)"
+                                        style="width:25px; height:25px; padding:0; border:none; cursor:pointer;"
+                                        title="Warna Font">
+                                </div>
                             </div>
                             <div class="toolbar-divider"></div>
                             <div class="toolbar-group">
-                                <span class="toolbar-label">Gaya</span>
-                                <button class="btn btn-small btn-secondary tool-btn" onclick="formatDoc('bold')"
-                                    title="Tebal"><b>B</b></button>
-                                <button class="btn btn-small btn-secondary tool-btn" onclick="formatDoc('italic')"
-                                    title="Condong"><i>I</i></button>
-                                <button class="btn btn-small btn-secondary tool-btn" onclick="formatDoc('underline')"
-                                    title="Garis"><u>U</u></button>
-                                <input type="color" id="foreColorPicker" onchange="formatDoc('foreColor', this.value)"
-                                    title="Warna">
-                            </div>
-                            <div class="toolbar-divider"></div>
-                            <div class="toolbar-group">
-                                <span class="toolbar-label">Paragraph</span>
-                                <button class="btn btn-small btn-secondary tool-btn" onclick="formatDoc('justifyLeft')"
-                                    title="Kiri"><i class="fas fa-align-left"></i></button>
-                                <button class="btn btn-small btn-secondary tool-btn"
-                                    onclick="formatDoc('justifyCenter')" title="Tengah"><i
-                                        class="fas fa-align-center"></i></button>
-                                <button class="btn btn-small btn-secondary tool-btn" onclick="formatDoc('justifyRight')"
-                                    title="Kanan"><i class="fas fa-align-right"></i></button>
-                                <button class="btn btn-small btn-secondary tool-btn" onclick="formatDoc('justifyFull')"
-                                    title="Penuh"><i class="fas fa-align-justify"></i></button>
+                                <span class="toolbar-label">Perenggan</span>
+                                <div class="toolbar-row">
+                                    <button class="btn btn-small btn-secondary tool-btn"
+                                        onclick="formatDoc('justifyLeft')"><i class="fas fa-align-left"></i></button>
+                                    <button class="btn btn-small btn-secondary tool-btn"
+                                        onclick="formatDoc('justifyCenter')"><i
+                                            class="fas fa-align-center"></i></button>
+                                    <button class="btn btn-small btn-secondary tool-btn"
+                                        onclick="formatDoc('justifyRight')"><i class="fas fa-align-right"></i></button>
+                                </div>
+                                <div class="toolbar-row" style="margin-top:5px;">
+                                    <button class="btn btn-small btn-secondary tool-btn"
+                                        onclick="formatDoc('insertUnorderedList')"><i
+                                            class="fas fa-list-ul"></i></button>
+                                    <button class="btn btn-small btn-secondary tool-btn"
+                                        onclick="formatDoc('insertOrderedList')"><i class="fas fa-list-ol"></i></button>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Insert Tab -->
                         <div id="tab-insert" class="ribbon-panel">
                             <div class="toolbar-group">
-                                <span class="toolbar-label">Media</span>
-                                <label for="reportLogoInput" class="btn btn-small btn-secondary">🖼️ Ambil Logo</label>
-                                <input type="file" id="reportLogoInput" accept="image/*" style="display:none;">
+                                <div class="toolbar-row">
+                                    <button class="btn btn-small btn-secondary tool-btn" onclick="addReportRow()" title="Tambah Baris"><i class="fas fa-plus-square"></i></button>
+                                    <button class="btn btn-small btn-secondary tool-btn" onclick="addReportColumn()" title="Tambah Lajur"><i class="fas fa-columns"></i></button>
+                                    <button class="btn btn-small btn-secondary tool-btn" onclick="deleteReportRow()" title="Padam Baris" style="color:var(--danger)"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                                <span class="toolbar-label">Jadual</span>
                             </div>
                             <div class="toolbar-divider"></div>
                             <div class="toolbar-group">
-                                <span class="toolbar-label">Saiz Logo</span>
-                                <input type="range" id="logoWidthSlider" min="10" max="500" value="150"
-                                    style="width:150px;">
-                                <span id="logoWidthValue" style="font-size:11px;">150px</span>
+                                <div class="toolbar-row">
+                                    <label for="reportLogoInput" class="btn btn-small btn-secondary" style="height:32px; padding:0 10px; display:flex; align-items:center; gap:5px; cursor:pointer;" title="Muat naik logo">
+                                        <i class="fas fa-image"></i> Logo
+                                    </label>
+                                    <input type="file" id="reportLogoInput" accept="image/*" style="display:none;">
+                                    <input type="range" id="logoWidthSlider" min="10" max="500" value="150" style="width:80px;" title="Saiz Logo">
+                                </div>
+                                <span class="toolbar-label">Ilustrasi</span>
+                            </div>
+                            <div class="toolbar-divider"></div>
+                            <div class="toolbar-group">
+                                <div class="toolbar-row">
+                                    <button class="btn btn-small btn-secondary" onclick="insertReportBox()" style="height:32px; padding:0 10px; display:flex; align-items:center; gap:5px;" title="Tambah Kotak Teks">
+                                        <i class="fas fa-paragraph"></i> Edit Box
+                                    </button>
+                                </div>
+                                <span class="toolbar-label">Teks</span>
                             </div>
                         </div>
 
                         <!-- Layout Tab -->
                         <div id="tab-layout" class="ribbon-panel">
                             <div class="toolbar-group">
-                                <span class="toolbar-label">Jarak Barisan (Line Height)</span>
-                                <select id="lineHeightSelect" class="toolbar-select"
-                                    onchange="updateLineHeight(this.value)">
-                                    <option value="1">Sempit (1.0)</option>
-                                    <option value="1.2" selected>Normal (1.2)</option>
-                                    <option value="1.5">Sederhana (1.5)</option>
-                                    <option value="2">Luas (2.0)</option>
-                                </select>
+                                <div class="toolbar-row">
+                                    <button class="btn btn-small btn-secondary tool-btn" onclick="setReportOrientation('portrait')" title="Portrait"><i class="fas fa-file"></i></button>
+                                    <button class="btn btn-small btn-secondary tool-btn" onclick="setReportOrientation('landscape')" title="Landscape"><i class="fas fa-file-invoice" style="transform:rotate(90deg)"></i></button>
+                                </div>
+                                <span class="toolbar-label">Halaman</span>
                             </div>
                             <div class="toolbar-divider"></div>
                             <div class="toolbar-group">
-                                <span class="toolbar-label">Transform</span>
-                                <button class="btn btn-small btn-secondary" onclick="transformText('uppercase')">HURUF
-                                    BESAR</button>
-                                <button class="btn btn-small btn-secondary" onclick="transformText('lowercase')">huruf
-                                    kecil</button>
+                                <div class="toolbar-row">
+                                    <select class="toolbar-select" onchange="setReportMargins(this.value)" style="width:110px;">
+                                        <option value="20mm">20mm (Normal)</option>
+                                        <option value="10mm">10mm (Sempit)</option>
+                                        <option value="0mm">0mm (Tiada)</option>
+                                    </select>
+                                </div>
+                                <span class="toolbar-label">Margin</span>
+                            </div>
+                            <div class="toolbar-divider"></div>
+                            <div class="toolbar-group">
+                                <div class="toolbar-row">
+                                    <select id="lineHeightSelect" class="toolbar-select" onchange="updateLineHeight(this.value)" style="width:60px;">
+                                        <option value="1">1.0</option>
+                                        <option value="1.2" selected>1.2</option>
+                                        <option value="1.5">1.5</option>
+                                    </select>
+                                    <button class="btn btn-small btn-secondary tool-btn" onclick="toggleReportGrid()" title="Grid"><i class="fas fa-th"></i></button>
+                                </div>
+                                <span class="toolbar-label">Format</span>
                             </div>
                         </div>
                     </div>

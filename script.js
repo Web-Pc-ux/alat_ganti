@@ -575,8 +575,8 @@ function displayRequests() {
 
             <td data-label="Petugas">${r.juruteknik}</td>
             <td data-label="Catatan">${r.catat}</td>
-            <td data-label="Tarikh">${r.date}</td>
-            <td data-label="Selesai">${r.dateend}</td>
+            <td data-label="Tarikh">${formatDisplayDate(r.date)}</td>
+            <td data-label="Selesai">${formatDisplayDate(r.dateend)}</td>
             <td data-label="Tindakan">
                 <div class="action-buttons">
                     <button class="btn btn-edit" onclick="promptEditRequest(${r.id})">✏️</button>
@@ -770,6 +770,28 @@ function showSection(sectionId) {
         }
     });
 
+    // Update Header Text based on section (Tulisan Page)
+    const headerH1 = document.querySelector('.header-content h1');
+    const headerP = document.querySelector('.header-content .subtitle');
+
+    if (headerH1 && headerP) {
+        const sectionMap = {
+            'dashboard': { h1: 'Panel Utama', p: 'Ringkasan permohonan dan statistik alat ganti' },
+            'requests': { h1: 'Pengurusan Permohonan', p: 'Kawal selia peranti dan permohonan pengguna' },
+            'equipment-list': { h1: 'Inventori Stok', p: 'Senarai baki dan kuantiti alat ganti semasa' },
+            'equipment-listPC': { h1: 'Pangkalan Data PC', p: 'Senarai komputer Desktop dan Laptop' },
+            'penerimaan': { h1: 'Penerimaan Item', p: 'Rekod kemasukan barang baru daripada pembekal' },
+            'syarikat': { h1: 'Pengurusan Vendor', p: 'Maklumat syarikat pembekal dan baki kontrak' },
+            'budget': { h1: 'Laporan Kewangan', p: 'Analisis penggunaan bajet dan laporan stok' },
+            'juruteknikSection': { h1: 'Staf Teknikal', p: 'Senarai juruteknik yang bertugas' },
+            'adminSection': { h1: 'Pentadbiran', p: 'Kawal selia akses pengguna dan admin' }
+        };
+
+        const info = sectionMap[sectionId] || { h1: 'Sistem Alat Ganti', p: 'Pengurusan profesional' };
+        headerH1.textContent = info.h1;
+        headerP.textContent = info.p;
+    }
+
     // Save state
     localStorage.setItem('activeSection', sectionId);
 
@@ -898,7 +920,7 @@ window.transformText = function (type) {
 };
 
 let reportSettings = {
-    logo: null,
+    logo: '../Logo/UMS.png',
     logoWidth: 150,
     baseFontSize: 10,
     fontFamily: 'Inter, sans-serif',
@@ -913,13 +935,20 @@ function saveReportSettings() {
 
     // Save Logo Settings
     const logoImg = document.getElementById('reportLogoPreview');
+    const logoArea = document.getElementById('reportLogoArea');
+
     if (logoImg) {
         reportSettings.logo = logoImg.src;
     }
 
-    const logoSlider = document.getElementById('logoWidthSlider');
-    if (logoSlider) {
-        reportSettings.logoWidth = logoSlider.value;
+    if (logoArea && logoArea.offsetWidth > 0) {
+        // Capture manual resize from the box
+        reportSettings.logoWidth = logoArea.offsetWidth;
+    } else {
+        const logoSlider = document.getElementById('logoWidthSlider');
+        if (logoSlider) {
+            reportSettings.logoWidth = logoSlider.value;
+        }
     }
 
     reportSettings.baseFontSize = parseInt(editableArea.style.fontSize) || 10;
@@ -1289,11 +1318,11 @@ function generateReport() {
 
             return `
             <tr>
-                <td class="text-center">${idx + 1}</td>
-                <td>${g.item} (${g.jenama})</td>
-                <td class="text-center">${g.qty}</td>
-                <td class="text-right">RM ${price.toFixed(2)}</td>
-                <td class="text-right">RM ${rowTotal.toFixed(2)}</td>
+                <td class="text-center" contenteditable="true">${idx + 1}</td>
+                <td contenteditable="true">${g.item} (${g.jenama})</td>
+                <td class="text-center" contenteditable="true">${g.qty}</td>
+                <td class="text-right" contenteditable="true">RM ${price.toFixed(2)}</td>
+                <td class="text-right" contenteditable="true">RM ${rowTotal.toFixed(2)}</td>
             </tr>
         `;
         }).join('');
@@ -1309,7 +1338,6 @@ function generateReport() {
     const grandTotalPrice = resA.totalPrice + resB.totalPrice + resC.totalPrice;
 
     // Load saved settings display
-    const currentLogoHTML = reportSettings.logo ? `<img src="${reportSettings.logo}" id="reportLogoPreview" alt="Report Logo" style="width:${reportSettings.logoWidth}px">` : '🏢';
 
     // Sync UI controls with settings
     const fontSelect = document.getElementById('fontFamilySelect');
@@ -1324,102 +1352,86 @@ function generateReport() {
     const logoLabel = document.getElementById('logoWidthValue');
     if (logoLabel) logoLabel.textContent = `${reportSettings.logoWidth}px`;
 
-    // Use saved header or default
-    const headerHTML = reportSettings.customHeaderHTML || `
-                <div id="reportLogoArea" class="report-logo-placeholder">${currentLogoHTML}</div>
+    const currentLogoHTML = reportSettings.logo ? `<img src="${reportSettings.logo}" id="reportLogoPreview" alt="Report Logo">` : '🖨️';
+
+    const headerHTML = `
+                <div id="reportLogoArea" class="report-logo-placeholder" style="width: ${reportSettings.logoWidth}px;">${currentLogoHTML}</div>
                 <div class="report-title" contenteditable="true">BORANG PERMOHONAN ALAT GANTI BAGI TUJUAN PENYELENGGARAAN KOMPUTER UMS UMS/BEN/S2/2025 (100) JADUAL A, JADUAL B DAN JADUAL C</div>
                 <div class="report-subtitle" contenteditable="true" style="text-align: left; margin-top: 15px;">Pembekal Dilantik : DATATECHNET</div>
     `;
 
-    // Use saved signatures or default
-    const signatureHTML = reportSettings.customSignatureHTML || `
-                <div class="signature-block">
-                    <div style="font-weight: bold; margin-bottom: 40px;">Disediakan Oleh;</div>
-                    <div class="signature-details">
-                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Nama</span> <span>: _______________________</span></div>
-                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Jawatan</span> <span>: </span></div>
-                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Cop</span> <span>: </span></div>
-                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Tarikh</span> <span>: </span></div>
-                    </div>
-                </div>
-                <div class="signature-block">
-                    <div style="font-weight: bold; margin-bottom: 40px;">Disemak Oleh;</div>
-                    <div class="signature-details">
-                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Nama</span> <span>: _______________________</span></div>
-                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Jawatan</span> <span>: </span></div>
-                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Cop</span> <span>: </span></div>
-                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Tarikh</span> <span>: </span></div>
-                    </div>
-                </div>
-                <div class="signature-block">
-                    <div style="font-weight: bold; margin-bottom: 40px;">Disahkan Oleh;</div>
-                    <div class="signature-details">
-                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Nama</span> <span>: _______________________</span></div>
-                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Jawatan</span> <span>: </span></div>
-                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Cop</span> <span>: </span></div>
-                        <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Tarikh</span> <span>: </span></div>
-                    </div>
-                </div>
+    const signatureHTML = `
+
+                <div class="sig-grid">
+        <div class="sig-box">
+            Disediakan Oleh;
+            <div class="sig-line"></div>
+            Nama : <br> Jawatan : <br> Cop : <br> Tarikh :
+        </div>
+        <div class="sig-box">
+            Disemak Oleh;
+            <div class="sig-line"></div>
+            Nama : <br> Jawatan : <br> Cop : <br> Tarikh :
+        </div>
+        <div class="sig-box">
+            Disahkan Oleh;
+            <div class="sig-line"></div>
+            Nama : <br> Jawatan : <br> Cop : <br> Tarikh :
+        </div>
+    </div>
     `;
 
-    // ADDED: Contractor Section dedicated string
     const contractorHTML = `
             <div style="margin-top:40px; margin-bottom: 20px; text-align:center; position: relative;">
                 <div style="border-top: 1px dashed #000; width: 100%; position: absolute; top: 50%; z-index: 1;"></div>
                 <span style="background: #fff; padding: 0 15px; position: relative; z-index: 2; font-weight: bold; font-size: 10pt;">BAHAGIAN KONTRAKTOR</span>
             </div>
-            <div style="font-size: 9pt; margin-bottom: 15px;">
-                Pengesahan penerimaan borang permohonan JTMK kepada Pembekal pada tarikh : _______________________
+            <div style="font-size: 9pt; margin-bottom: 15px;" contenteditable="true">
+                Pengesahan penerimaan borang permohonan JTMK kepada Pembekal.
             </div>
             <div style="margin-top:10px; font-weight:bold; font-size:9pt;">
                 Diterima Oleh;
             </div>
-            <div class="signature-block" style="margin-top:10px; width:40%;">
-                <div class="signature-details">
-                    <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Nama</span> <span>: _______________________</span></div>
-                    <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Jawatan</span> <span>: </span></div>
-                    <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Cop</span> <span>: </span></div>
-                    <div style="display: flex; gap: 5px;"><span style="display: inline-block; width: 60px;">Tarikh</span> <span>: </span></div>
-                </div>
+            <div class="sig-box">
+        <div class="sig-line1"></div>
+        Nama : <br> Jawatan : <br> Cop : <br> Tarikh :
+    </div>
             </div>
     `;
 
     editableArea.innerHTML = `
-        <div class="report-page" style="font-size: ${reportSettings.baseFontSize}pt; font-family: ${reportSettings.fontFamily}; line-height: ${reportSettings.lineHeight}">
+        <div class="report-page" style="font-size: ${reportSettings.baseFontSize}pt; font-family: ${reportSettings.fontFamily}; line-height: ${reportSettings.lineHeight}; min-height: 297mm; background: #fff;">
             <div class="report-header">
                 ${headerHTML}
             </div>
 
             <div class="report-info" contenteditable="true" style="text-align: left; text-decoration: none; margin: 30px 0 15px 0;">MAKLUMAT PERMOHONAN ALAT GANTI UMS/BEN/S2/2025 (100) KALI KE-</div>
-
             ${jadualA.length > 0 ? `
-            <div class="report-section">
-                <div class="report-section-title">Permohonan bagi Jadual A (Alat Ganti bagi perkakasan computer meja Desktop)</div>
-                <table class="report-table">
-                    <thead>
-                        <tr>
-                            <th width="5%">No.</th>
-                            <th width="55%">Deskripsi</th>
-                            <th width="10%" class="text-center">Kuantiti</th>
-                            <th width="15%" class="text-right">Harga seunit (RM)</th>
-                            <th width="15%" class="text-right">Jumlah (RM)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${resA.rows}
-                        <tr class="report-total-row">
-                            <td colspan="2" class="text-right">Jumlah Kuantiti</td>
-                            <td class="text-center">${resA.totalQty}</td>
-                            <td class="text-right">Jumlah</td>
-                            <td class="text-right">RM ${resA.totalPrice.toFixed(2)}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>` : ''}
+            <div style="font-weight: bold; font-size: 9.5pt; margin-bottom: 15px; text-transform: uppercase;">Permohonan bagi Jadual A (ALAT GANTI BAGI PERKAKASAN COMPUTER MEJA DESKTOP)</div>
+            <table class="report-table" style="width: 100%; border-collapse: collapse; margin-bottom: 25px; border: 1.5px solid #000;">
+                <thead>
+                    <tr style="background: #d1d5db;">
+                        <th style="border: 1px solid #000; padding: 8px; font-size: 9pt;" width="5%">NO.</th>
+                        <th style="border: 1px solid #000; padding: 8px; font-size: 9pt;" width="50%">DESKRIPSI</th>
+                        <th style="border: 1px solid #000; padding: 8px; font-size: 9pt;" width="10%">KUANTITI</th>
+                        <th style="border: 1px solid #000; padding: 8px; font-size: 9pt;" width="17%">HARGA SEUNIT (RM)</th>
+                        <th style="border: 1px solid #000; padding: 8px; font-size: 9pt;" width="18%">JUMLAH (RM)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${resA.rows}
+                    <tr style="font-weight: bold; background: #fff;">
+                        <td colspan="2" style="border: 1px solid #000; padding: 8px; text-align: right;">Jumlah Kuantiti</td>
+                        <td style="border: 1px solid #000; padding: 8px; text-align: center;">${resA.totalQty}</td>
+                        <td style="border: 1px solid #000; padding: 8px; text-align: right;">Jumlah</td>
+                        <td style="border: 1px solid #000; padding: 8px; text-align: right;">RM ${resA.totalPrice.toFixed(2)}</td>
+                    </tr>
+                </tbody>
+            </table>` : ''}
 
             ${jadualB.length > 0 ? `
             <div class="report-section">
-                <div class="report-section-title">Permohonan bagi jadual b (Alat ganti bagi perkakasan Laptop / Notebook )</div>
+                <div class="report-section-title">Permohonan bagi Jadual B (Alat ganti bagi perkakasan Laptop / Notebook )</div>
                 <table class="report-table">
                     <thead>
                         <tr>
@@ -1444,7 +1456,7 @@ function generateReport() {
 
             ${jadualC.length > 0 ? `
             <div class="report-section">
-                <div class="report-section-title">Permohonan jadual c (bahan pakai habis)</div>
+                <div class="report-section-title">Permohonan bagi Jadual C (Bahan Pakai Habis)</div>
                 <table class="report-table">
                     <thead>
                         <tr>
@@ -1470,30 +1482,28 @@ function generateReport() {
             <div class="report-grand-total">
                 <table class="report-table-grand">
                     <tr>
-                        <td width="30%">
+                        <td width="0%" class="text-right" contenteditable="true">
                             <strong>Jumlah Kuantiti bagi Jadual A Dan Jadual B</strong>
                         </td>
-                        <td width="10%" class="text-center">
+                        <td width="10.5%" class="text-center" contenteditable="true">
                             <strong>${resA.totalQty + resB.totalQty}</strong>
                         </td>
-                        <td width="30%">
+                        <td width="18%" contenteditable="true">
                            <strong>Jumlah harga keseluruhan bagi Jadual A Dan Jadual B</strong>
                         </td>
-                        <td width="30%" class="text-right">
+                        <td width="19%" class="text-right" contenteditable="true">
                             <strong>RM ${(resA.totalPrice + resB.totalPrice).toFixed(2)}</strong>
                         </td>
                     </tr>
                 </table>
             </div>
 
-            <div style="margin-top:60px; margin-bottom: 20px; text-align:center; position: relative;">
+            <div style="margin-top:40px; margin-bottom: 20px; text-align:center; position: relative;">
                 <div style="border-top: 1px dashed #000; width: 100%; position: absolute; top: 50%; z-index: 1;"></div>
                 <span style="background: #fff; padding: 0 15px; position: relative; z-index: 2; font-weight: bold; font-size: 10pt;">BAHAGIAN JTMK</span>
             </div>
 
-            <div class="report-signature-container">
-                ${signatureHTML}
-            </div>
+            ${signatureHTML}
 
             ${contractorHTML}
         </div>
@@ -1507,6 +1517,78 @@ function generateReport() {
 
         // Initialize interactive resizing
         setTimeout(window.initResizableLogo, 100);
+    }
+}
+
+/**
+ * Membaiki format tarikh agar lebih mesra pengguna (DD/MM/YYYY)
+ * Mengendalikan format ISO (Google Sheets) dan format sedia ada.
+ */
+function formatDisplayDate(dateStr) {
+    if (!dateStr || dateStr === '-') return '-';
+
+    // Jika sudah dalam format DD/MM/YYYY, jangan ubah
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return dateStr;
+
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+
+        // Jika ada masa (bukan 00:00), sertakan masa
+        if (hours !== '00' || minutes !== '00') {
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        }
+
+        return `${day}/${month}/${year}`;
+    } catch (e) {
+        return dateStr;
+    }
+}
+
+/**
+ * Menukar format tarikh untuk input datetime-local (YYYY-MM-DDTHH:mm)
+ */
+function formatDateForInput(dateStr) {
+    if (!dateStr) return '';
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return '';
+
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch (e) {
+        return '';
+    }
+}
+
+/**
+ * Menukar format tarikh untuk input date sahaja (YYYY-MM-DD)
+ */
+function formatDateOnlyForInput(dateStr) {
+    if (!dateStr) return '';
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return '';
+
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+    } catch (e) {
+        return '';
     }
 }
 
@@ -1527,8 +1609,179 @@ function getStatusClass(status) {
     }
 }
 
+// --- Dynamic Report Editing Functions ---
+window.insertReportBox = function () {
+    const box = document.createElement('div');
+    box.contentEditable = "true";
+    box.className = "report-edit-box";
+    box.style.border = "1px solid #000";
+    box.style.padding = "10px";
+    box.style.margin = "10px 0";
+    box.style.minHeight = "50px";
+    box.style.width = "250px";
+    box.style.resize = "both";
+    box.style.overflow = "auto";
+    box.style.display = "inline-block";
+    box.style.verticalAlign = "top";
+    box.innerHTML = "Klik di sini untuk edit teks...";
+
+    const sel = window.getSelection();
+    if (sel.rangeCount) {
+        const range = sel.getRangeAt(0);
+        range.insertNode(box);
+    } else {
+        document.getElementById('reportEditableArea').appendChild(box);
+    }
+};
+
+window.addReportRow = function () {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    let node = sel.anchorNode;
+    while (node && node.nodeName !== 'TABLE' && node.id !== 'reportEditableArea') {
+        node = node.parentNode;
+    }
+    if (node && node.nodeName === 'TABLE') {
+        const tbody = node.querySelector('tbody') || node;
+        // Cari baris terakhir yang bukan 'total-row' jika ada
+        const rows = [...tbody.rows];
+        const lastDataRow = rows.reverse().find(r => !r.classList.contains('report-total-row'));
+
+        const colCount = lastDataRow ? lastDataRow.cells.length : node.rows[0].cells.length;
+        const newRow = node.insertRow(lastDataRow ? lastDataRow.rowIndex + 1 : -1);
+
+        for (let i = 0; i < colCount; i++) {
+            const cell = newRow.insertCell();
+            cell.innerHTML = "&nbsp;";
+            if (lastDataRow) {
+                cell.className = lastDataRow.cells[i].className;
+                cell.style.cssText = lastDataRow.cells[i].style.cssText;
+            }
+        }
+        showNotification("Baris ditambah.", "info");
+    } else {
+        showNotification("Sila klik di dalam jadual untuk tambah baris.", "warning");
+    }
+};
+
+window.addReportColumn = function () {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    let node = sel.anchorNode;
+    while (node && node.nodeName !== 'TABLE' && node.id !== 'reportEditableArea') {
+        node = node.parentNode;
+    }
+    if (node && node.nodeName === 'TABLE') {
+        const thead = node.querySelector('thead');
+        if (thead) {
+            const hRow = thead.rows[0];
+            const th = document.createElement('th');
+            th.innerHTML = "Tajuk";
+            hRow.appendChild(th);
+        }
+
+        const rows = [...node.rows];
+        rows.forEach(row => {
+            if (row.parentNode.nodeName === 'THEAD') return;
+            const cell = row.insertCell();
+            cell.innerHTML = "&nbsp;";
+            if (row.classList.contains('report-total-row')) {
+                // Adjust colspan if it's a total row
+                const firstCell = row.cells[0];
+                if (firstCell && firstCell.hasAttribute('colspan')) {
+                    // Optional: intelligently adjust colspan
+                }
+            }
+        });
+        showNotification("Lajur ditambah. Sila adjust lebar jadual jika perlu.", "info");
+    } else {
+        showNotification("Sila klik di dalam jadual untuk tambah lajur.", "warning");
+    }
+};
+
+window.deleteReportRow = function () {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    let node = sel.anchorNode;
+    while (node && node.nodeName !== 'TR' && node.id !== 'reportEditableArea') {
+        node = node.parentNode;
+    }
+    if (node && node.nodeName === 'TR') {
+        if (node.classList.contains('report-total-row')) {
+            showNotification("Baris jumlah tidak boleh dipadam secara manual.", "warning");
+            return;
+        }
+        node.remove();
+        showNotification("Baris dipadam.", "info");
+    } else {
+        showNotification("Sila klik pada baris untuk memadam.", "warning");
+    }
+};
+
+window.setReportOrientation = function (type) {
+    const pages = document.querySelectorAll('.report-page');
+    pages.forEach(p => {
+        if (type === 'landscape') {
+            p.style.width = "297mm";
+            p.style.minHeight = "210mm";
+        } else {
+            p.style.width = "210mm";
+            p.style.minHeight = "297mm";
+        }
+    });
+    showNotification(`Orientasi ditukar ke ${type}.`, "info");
+};
+
+window.setReportMargins = function (margin) {
+    const pages = document.querySelectorAll('.report-page');
+    pages.forEach(p => {
+        p.style.padding = margin;
+    });
+    showNotification(`Margin ditukar ke ${margin}.`, "info");
+};
+
+window.toggleReportGrid = function () {
+    const area = document.getElementById('reportEditableArea');
+    if (area) {
+        area.classList.toggle('show-grid');
+        showNotification("Grid dipaparkan/disembunyikan.", "info");
+    }
+};
 
 
+
+
+window.switchRibbonTab = function (tabId) {
+    document.querySelectorAll('.ribbon-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.ribbon-tab').forEach(t => t.classList.remove('active'));
+
+    const targetPanel = document.getElementById(tabId);
+    if (targetPanel) targetPanel.classList.add('active');
+
+    // Find the tab button that calls this tabId
+    const tabBtns = document.querySelectorAll('.ribbon-tab');
+    tabBtns.forEach(btn => {
+        if (btn.getAttribute('onclick').includes(tabId)) {
+            btn.classList.add('active');
+        }
+    });
+};
+
+window.formatDoc = function (cmd, value = null) {
+    if (cmd === 'fontName' || cmd === 'foreColor') {
+        document.execCommand(cmd, false, value);
+    } else {
+        document.execCommand(cmd, false, null);
+    }
+};
+
+window.updateLineHeight = function (val) {
+    const pages = document.querySelectorAll('.report-page');
+    pages.forEach(p => {
+        p.style.lineHeight = val;
+    });
+    showNotification(`Jarak barisan ditukar ke ${val}.`, "info");
+};
 
 
 // Notification System
@@ -1959,48 +2212,141 @@ document.addEventListener('click', (e) => {
     // Stok actions are handled by the separate listener below
 });
 
-function displayEquipmentTable(filteredEquipment = equipment) {
-    const tableBody = document.getElementById('equipmentTableBody');
-    if (!tableBody) return;
+function displayEquipmentTable(filteredEquipment = null) {
+    const listSection = document.getElementById('equipment-list');
+    if (!listSection) return;
 
-    const dataToDisplay = filteredEquipment && filteredEquipment.length > 0 ? filteredEquipment : equipment;
+    // Use filtered or all equipment
+    const dataToDisplay = filteredEquipment || equipment;
 
-    // Update category filters
-    updateCategoryFilters();
+    // Remove existing table/grid to rebuild
+    const oldGrid = document.querySelector('.vendor-folders-grid');
+    if (oldGrid) oldGrid.remove();
 
-    if (dataToDisplay.length === 0) {
-        tableBody.innerHTML = '<tr class="empty-row"><td colspan="10" class="text-center">Belum ada data peralatan. Tambahkan peralatan baru untuk memulai.</td></tr>';
-        return;
+    // Create Grid Container
+    const grid = document.createElement('div');
+    grid.className = 'vendor-folders-grid';
+
+    // Group items by Syarikat
+    const grouped = {};
+    dataToDisplay.forEach(item => {
+        const vendor = item.syarikat || 'Tanpa Syarikat';
+        if (!grouped[vendor]) grouped[vendor] = [];
+        grouped[vendor].push(item);
+    });
+
+    const now = new Date();
+
+    // Render Folders
+    const vendorNames = Object.keys(grouped).sort();
+
+    if (vendorNames.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'text-center';
+        empty.style.padding = '50px';
+        empty.style.gridColumn = '1 / -1';
+        empty.innerHTML = '<h3>Belum ada data peralatan.</h3>';
+        grid.appendChild(empty);
     }
-    //Colour Senarai alat ganti table dan susunan table
-    tableBody.innerHTML = dataToDisplay.map((item, index) => {
-        const syarikatObj = syarikatList.find(s => s.namaSyarikat === item.syarikat);
-        const syarikatDisplay = syarikatObj ? `${syarikatObj.namaSyarikat} (${syarikatObj.umsbenID})` : (item.syarikat || '-');
 
-        const statusClass = item.catit === 'Baru' ? 'status-new' : item.catit === 'Rusak' ? 'status-damage' : 'status-good';
-        const badgeColor = item.quantity <= 10 ? '#f31212ff' : '#2ecc71';
+    vendorNames.forEach(vendorName => {
+        const items = grouped[vendorName];
+        const syarikatObj = syarikatList.find(s => s.namaSyarikat === vendorName);
 
-        return `
-        <tr data-equipment-id="${item.id}">
-            <td data-label="No">${index + 1}</td>
-            <td data-label="Syarikat/Vendor"><strong>${syarikatDisplay}</strong></td>
-            <td data-label="Model"><strong>${item.komp1}</strong></td>
-            <td data-label="Item">${item.category}</td>
-            <td data-label="Jenama" style="text-align: center;">${item.namamodell}</td>
-            <td data-label="Stok"><span class="badge" style="background: ${badgeColor}; color: white; padding: 5px 10px; border-radius: 4px;">${item.quantity}</span></td>
-            <td data-label="Harga Unit">RM ${(item.hargaunit || 0).toFixed(2)}</td>
-            <td data-label="Jumlah">RM ${(item.totalrm || 0).toFixed(2)}</td>
-            <td data-label="Nota" style="text-align: center;">${item.notaganti}</td>
-            <td data-label="Tindakan">
-                <div class="action-buttons">
-                    <button class="btn btn-edit" onclick="editEquipment(${item.id})">✓ï¸ Edit</button>
-                    <button class="btn btn-danger" onclick="deleteEquipment(${item.id})">🗑️ Hapus</button>
-                </div>
-            </td>
-        </tr>
+        let status = 'Aktif';
+        let isExpired = false;
+
+        if (syarikatObj && syarikatObj.tarikhAkhir) {
+            const endDate = new Date(syarikatObj.tarikhAkhir);
+            if (!isNaN(endDate.getTime()) && endDate < now) {
+                status = 'Expired';
+                isExpired = true;
+            }
+        }
+
+        const folder = document.createElement('div');
+        folder.className = `folder-card ${isExpired ? 'folder-expired' : 'folder-active'}`;
+        folder.innerHTML = `
+            <div class="folder-status-badge">${status}</div>
+            <div class="folder-icon"><i class="fas fa-folder"></i></div>
+            <div class="folder-info">
+                <h3>${vendorName}</h3>
+                <p>${syarikatObj ? syarikatObj.umsbenID : '-'}</p>
+                <div class="folder-items-count">${items.length} Item Alat Ganti</div>
+            </div>
         `;
-    }).join('');
+
+        // Create expansion panel
+        const panel = document.createElement('div');
+        panel.className = 'folder-items-container';
+        panel.id = `folder-panel-${vendorName.replace(/\s+/g, '-')}`;
+
+        // Build table for this folder
+        panel.innerHTML = `
+            <div class="table-responsive">
+                <table class="equipment-table">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Item</th>
+                            <th>Jenama</th>
+                            <th>Stok</th>
+                            <th>Harga</th>
+                            <th>Status/Nota</th>
+                            <th>Tindakan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${items.map(item => {
+            const badgeColor = item.quantity <= 10 ? '#f31212ff' : '#2ecc71';
+            return `
+                                <tr>
+                                    <td data-label="Model"><strong>${item.komp1}</strong></td>
+                                    <td data-label="Item">${item.category}</td>
+                                    <td data-label="Jenama">${item.namamodell}</td>
+                                    <td data-label="Stok"><span class="badge" style="background: ${badgeColor}; color: white; padding: 4px 8px; border-radius: 4px;">${item.quantity}</span></td>
+                                    <td data-label="Harga">RM ${(item.hargaunit || 0).toFixed(2)}</td>
+                                    <td data-label="Nota">${item.notaganti || '-'}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-edit" onclick="editEquipment(${item.id})">✏️</button>
+                                            <button class="btn btn-danger" onclick="deleteEquipment(${item.id})">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        folder.onclick = () => {
+            const isActive = panel.classList.contains('active');
+            document.querySelectorAll('.folder-items-container').forEach(p => p.classList.remove('active'));
+            if (!isActive) panel.classList.add('active');
+            if (!isActive) {
+                setTimeout(() => {
+                    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+            }
+        };
+
+        grid.appendChild(folder);
+        grid.appendChild(panel);
+    });
+
+    const tableArea = listSection.querySelector('.table-responsive');
+    if (tableArea) {
+        if (!listSection.contains(grid)) {
+            listSection.insertBefore(grid, tableArea);
+        }
+        tableArea.style.display = 'none';
+    }
+
+    updateCategoryFilters();
 }
+
 
 function editEquipment(equipmentId) {
     const item = equipment.find(e => e.id == equipmentId);
@@ -2737,13 +3083,30 @@ function displaySyarikatTable() {
     // Sort by name
     const sorted = [...syarikatList].sort((a, b) => a.namaSyarikat.localeCompare(b.namaSyarikat));
 
+    // Auto-check expired status
+    const now = new Date();
+    let dataChanged = false;
+    syarikatList.forEach(item => {
+        if (item.tarikhAkhir && item.status === 'Aktif') {
+            const endDate = new Date(item.tarikhAkhir);
+            if (!isNaN(endDate.getTime()) && endDate < now) {
+                item.status = 'Tidak Aktif';
+                dataChanged = true;
+            }
+        }
+    });
+    if (dataChanged) {
+        saveDataToStorage();
+        updateSyarikatDropdowns();
+    }
+
     tbody.innerHTML = sorted.map((item, idx) => `
         <tr>
             <td data-label="No">${idx + 1}</td>
             <td data-label="ID UMSBEN">${item.umsbenID}</td>
             <td data-label="Syarikat"><strong>${item.namaSyarikat}</strong></td>
             <td data-label="Pemilik">${item.namaPemilik}</td>
-            <td data-label="Kontrak">${item.tarikhMula} - ${item.tarikhAkhir}</td>
+            <td data-label="Kontrak">${formatDisplayDate(item.tarikhMula)} - ${formatDisplayDate(item.tarikhAkhir)}</td>
             <td data-label="Status">
                 <span class="status-badge ${item.status === 'Aktif' ? 'status-selesai' : 'status-ditolak'}">
                     ${item.status}
@@ -2774,8 +3137,8 @@ window.editSyarikat = function (id) {
     document.getElementById('syarikatNama').value = item.namaSyarikat;
     document.getElementById('syarikatPemilik').value = item.namaPemilik;
     document.getElementById('syarikatStatus').value = item.status;
-    document.getElementById('syarikatMula').value = item.tarikhMula;
-    document.getElementById('syarikatAkhir').value = item.tarikhAkhir;
+    document.getElementById('syarikatMula').value = formatDateOnlyForInput(item.tarikhMula);
+    document.getElementById('syarikatAkhir').value = formatDateOnlyForInput(item.tarikhAkhir);
     document.getElementById('syarikatBajet').value = item.bajet;
 
     form.dataset.editingId = id;
@@ -2963,4 +3326,140 @@ function updateJuruteknikDropdowns() {
 
         if (currentValue) select.value = currentValue;
     });
+}
+
+// ==========================================
+// WEATHER SYSTEM PREMIUM
+// ==========================================
+
+let weatherSettings = {
+    city: 'Kota Kinabalu',
+    showOnLogin: true
+};
+
+function initWeather() {
+    try {
+        const saved = localStorage.getItem('weatherSettings');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && parsed.city) weatherSettings = parsed;
+        }
+    } catch (e) {
+        console.warn('Could not load weather settings');
+    }
+
+    // Fill forms if they exist
+    const cityInput = document.getElementById('weatherCity');
+    const showCheck = document.getElementById('weatherShowOnLogin');
+    if (cityInput) cityInput.value = weatherSettings.city;
+    if (showCheck) showCheck.checked = weatherSettings.showOnLogin;
+
+    // Set initial loading state in UI
+    const wTemp = document.getElementById('w-temp');
+    if (wTemp) wTemp.textContent = '...';
+    const swTemp = document.getElementById('sw-temp');
+    if (swTemp) swTemp.textContent = '...';
+
+    // Fetch and show weather
+    updateWeatherUI();
+
+    // Handle form submission
+    const weatherForm = document.getElementById('weatherSettingsForm');
+    if (weatherForm) {
+        weatherForm.onsubmit = (e) => {
+            e.preventDefault();
+            weatherSettings.city = document.getElementById('weatherCity').value.trim() || 'Kota Kinabalu';
+            weatherSettings.showOnLogin = document.getElementById('weatherShowOnLogin').checked;
+            localStorage.setItem('weatherSettings', JSON.stringify(weatherSettings));
+            showNotification('✓ Tetapan cuaca berjaya disimpan!', 'success');
+            updateWeatherUI();
+        };
+    }
+}
+
+async function updateWeatherUI() {
+    const weatherWidget = document.getElementById('weatherWidget');
+    const sidebarWidget = document.getElementById('sidebarWeather');
+    if (!weatherWidget && !sidebarWidget) return;
+
+    if (weatherWidget) {
+        weatherWidget.style.display = weatherSettings.showOnLogin ? 'flex' : 'none';
+    }
+
+    const city = weatherSettings.city || 'Kota Kinabalu';
+
+    try {
+        // Fetch weather with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
+        const response = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`, {
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) throw new Error('Weather fetch failed');
+
+        const data = await response.json();
+        if (!data.current_condition || !data.current_condition[0]) throw new Error('Invalid data');
+
+        const current = data.current_condition[0];
+        const temp = current.temp_C;
+        const desc = current.weatherDesc[0].value;
+        const cityDisplay = data.nearest_area[0].areaName[0].value;
+
+        // Update Login Widget
+        const loginTemp = document.getElementById('w-temp');
+        if (loginTemp) {
+            loginTemp.textContent = `${temp}°C`;
+            document.getElementById('w-city').textContent = cityDisplay || city;
+            document.getElementById('w-desc').textContent = desc;
+            document.getElementById('w-icon').innerHTML = getIcon(desc);
+        }
+
+        // Update Sidebar Widget
+        const sidebarTemp = document.getElementById('sw-temp');
+        if (sidebarTemp) {
+            sidebarTemp.textContent = `${temp}°C`;
+            document.getElementById('sw-city').textContent = cityDisplay || city;
+            document.getElementById('sw-icon').innerHTML = getIcon(desc);
+        }
+
+    } catch (err) {
+        console.error('Weather error:', err);
+
+        // Show silent error in UI
+        const cityText = document.getElementById('w-city');
+        if (cityText) cityText.textContent = 'Cuaca Luar Talian';
+
+        const swCityText = document.getElementById('sw-city');
+        if (swCityText) swCityText.textContent = 'Luar Talian';
+
+        // Fallback to static if failed
+        const loginTemp = document.getElementById('w-temp');
+        if (loginTemp && loginTemp.textContent === '--°C') {
+            loginTemp.textContent = '28°C'; // Default fallback
+            document.getElementById('w-desc').textContent = 'Cuaca Semasa';
+        }
+        const sidebarTemp = document.getElementById('sw-temp');
+        if (sidebarTemp && sidebarTemp.textContent === '--°C') {
+            sidebarTemp.textContent = '28°C';
+        }
+    }
+}
+
+function getIcon(desc) {
+    const lowerDesc = desc.toLowerCase();
+    if (lowerDesc.includes('sun') || lowerDesc.includes('clear')) return '<i class="fas fa-sun"></i>';
+    if (lowerDesc.includes('rain')) return '<i class="fas fa-cloud-showers-heavy"></i>';
+    if (lowerDesc.includes('cloud')) return '<i class="fas fa-cloud"></i>';
+    if (lowerDesc.includes('thunder')) return '<i class="fas fa-bolt"></i>';
+    return '<i class="fas fa-cloud-sun"></i>';
+}
+
+// Call init weather on load
+document.addEventListener('DOMContentLoaded', initWeather);
+// Immediate call for login page in case DOMContentLoaded already fired or for faster response
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    initWeather();
 }

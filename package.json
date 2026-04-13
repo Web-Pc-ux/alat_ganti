@@ -4,7 +4,8 @@
   "description": "Sistem Alat Ganti Komputer",
   "main": "index.html",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "powershell -ExecutionPolicy Bypass -File .\\start-server.ps1"
   },
   "repository": {
     "type": "git",

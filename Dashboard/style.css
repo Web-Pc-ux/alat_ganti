@@ -2,7 +2,9 @@
     box-sizing: border-box;
 }
 
-*, ::before, ::after {
+*,
+::before,
+::after {
     box-sizing: inherit;
 }
 
@@ -863,30 +865,7 @@ textarea:focus {
     }
 }
 
-@media (max-width: 1024px) {
-    .sidebar {
-        width: 80px;
-        padding: 35px 15px;
-    }
 
-    .sidebar .logo span,
-    .sidebar .nav-link span,
-    .sidebar .dropdown-toggle span,
-    .sidebar .sidebar-footer span,
-    .sidebar .dropdown-toggle .dropdown-icon {
-        display: none;
-    }
-
-    .main-content-wrapper {
-        margin-left: 80px;
-    }
-
-    .nav-link,
-    .dropdown-toggle {
-        padding: 15px;
-        justify-content: center;
-    }
-}
 
 @media (max-width: 768px) {
     .modal {
@@ -974,8 +953,16 @@ textarea:focus {
         color: var(--danger);
     }
 
-    .sidebar-footer .logout-btn span {
+    .sidebar-footer .logout-btn i {
         display: none;
+    }
+
+    .sidebar-footer .logout-btn span {
+        display: block;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: #94a3b8;
     }
 
     .sidebar-footer .logout-btn i {
@@ -1010,21 +997,29 @@ textarea:focus {
 
     .nav-link i,
     .dropdown-toggle i:first-child {
-        font-size: 1.6rem;
-        margin-bottom: 0;
-        transition: color 0.3s ease;
+        display: none;
+        /* Gantian icon kepada tulisan */
     }
 
     .nav-link.active i,
     .dropdown-toggle.active i:first-child {
-        color: var(--white);
-        text-shadow: 0 0 10px var(--accent);
+        display: none;
     }
 
     .nav-link span,
     .dropdown-toggle span {
-        display: none;
-        /* User requested ONLY ICON */
+        display: block;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .nav-link.active span,
+    .dropdown-toggle.active span {
+        color: var(--white);
     }
 
     .dropdown-toggle .dropdown-icon {
@@ -1509,10 +1504,30 @@ textarea:focus {
 }
 
 .report-logo-placeholder {
-    max-height: 100px;
+    max-height: 300px;
+    min-height: 40px;
+    width: auto;
+    min-width: 40px;
     margin-bottom: 15px;
     display: flex;
     justify-content: center;
+    align-items: center;
+    overflow: auto;
+    resize: both;
+    margin-left: auto;
+    margin-right: auto;
+    transition: border 0.3s ease;
+}
+
+.report-logo-placeholder:hover {
+    outline: 1px dashed #3498db;
+    background: rgba(52, 152, 219, 0.05);
+}
+
+.report-logo-placeholder img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
 }
 
 .report-title {
@@ -1586,9 +1601,11 @@ textarea:focus {
 }
 
 .report-table-grand {
-    width: 100%;
+    width: 80%;
     border-collapse: collapse;
     border: 1px solid #000 !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
 }
 
 .report-table-grand td {
@@ -1611,6 +1628,30 @@ textarea:focus {
     flex: 1;
     text-align: left;
 }
+
+.sig-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.sig-box {
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+.sig-line {
+    border-bottom: 1px solid #000;
+    margin: 30px 0 10px 0;
+    width: 80%;
+}
+
+.sig-line1 {
+    border-bottom: 1px solid #000;
+    margin: 30px 0 10px 0;
+    width: 30%;
+}
+
 
 .signature-line {
     border-bottom: 1px solid #000;
@@ -1709,8 +1750,8 @@ textarea:focus {
     }
 
     /* Hide EVERYTHING except report modal content */
-    body > *:not(.app-layout),
-    .app-layout > *:not(#reportPreviewModal),
+    body>*:not(.app-layout),
+    .app-layout>*:not(#reportPreviewModal),
     .sidebar,
     .header,
     .footer,
@@ -1742,6 +1783,14 @@ textarea:focus {
         max-width: none !important;
         margin: 0 !important;
         padding: 0 !important;
+    }
+
+    .report-logo-placeholder {
+        resize: none !important;
+        overflow: visible !important;
+        outline: none !important;
+        border: none !important;
+        background: transparent !important;
     }
 
     .report-editable-container {
@@ -1794,4 +1843,584 @@ textarea:focus {
     .report-table th {
         background: #d1d5db !important;
     }
+}
+
+/* --- INVENTORY FOLDER VIEW --- */
+.vendor-folders-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+    margin-top: 25px;
+}
+
+.folder-card {
+    background: var(--white);
+    border-radius: var(--radius-md);
+    padding: 25px;
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    border: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.folder-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--premium-shadow);
+    border-color: var(--accent);
+}
+
+.folder-icon {
+    font-size: 3.5rem;
+    margin-bottom: 5px;
+    position: relative;
+}
+
+.folder-active .folder-icon i {
+    color: var(--success);
+    filter: drop-shadow(0 5px 10px rgba(16, 185, 129, 0.3));
+}
+
+.folder-expired .folder-icon i {
+    color: var(--danger);
+    filter: drop-shadow(0 5px 10px rgba(239, 68, 68, 0.3));
+}
+
+.folder-status-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--white);
+}
+
+.folder-active .folder-status-badge {
+    background: linear-gradient(135deg, var(--success), #059669);
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+}
+
+.folder-expired .folder-status-badge {
+    background: linear-gradient(135deg, var(--danger), #dc2626);
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+}
+
+.folder-info h3 {
+    margin: 0;
+    font-size: 1.35rem;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.folder-info p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin: 8px 0 0 0;
+}
+
+.folder-items-count {
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--accent);
+}
+
+.folder-items-container {
+    grid-column: 1 / -1;
+    background: var(--white);
+    border-radius: var(--radius-md);
+    padding: 25px;
+    margin-top: 10px;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    display: none;
+    /* Controlled by JS */
+    animation: folderSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes folderSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.folder-items-container.active {
+    display: block;
+}
+
+.folder-card.folder-expired {
+    border-left: 6px solid var(--danger);
+}
+
+.folder-card.folder-active {
+    border-left: 6px solid var(--success);
+}
+
+.folder-card::after {
+    content: '\f07c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    bottom: 20px;
+    right: 25px;
+    font-size: 3rem;
+    opacity: 0.05;
+    transform: rotate(-10deg);
+}
+
+/* --- FLOATING ACTION BUTTON (FAB) --- */
+.fab-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 65px;
+    height: 65px;
+    background: linear-gradient(135deg, var(--accent), #2563eb);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px var(--accent-glow);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    z-index: 1005;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    font-size: 1.6rem;
+}
+
+.fab-btn i {
+    transition: transform 0.4s ease;
+}
+
+.fab-btn:hover {
+    transform: scale(1.15) translateY(-5px);
+    box-shadow: 0 15px 35px var(--accent-glow);
+}
+
+.fab-btn:hover i {
+    transform: rotate(90deg);
+}
+
+/* FAB Label */
+.fab-btn::before {
+    content: 'Tambah Item Baru';
+    position: absolute;
+    right: 85px;
+    background: var(--primary);
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateX(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    box-shadow: var(--premium-shadow);
+    color: var(--white);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fab-btn:hover::before {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Hide FAB by default, only show in relevant sections */
+#equipment-list .fab-btn,
+#dashboard .fab-btn,
+#dashboard .fab-btn-secondary {
+    display: flex;
+}
+
+/* Secondary FAB for reports */
+.fab-btn-secondary {
+    position: fixed;
+    bottom: 110px;
+    /* Above the primary FAB */
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: var(--white);
+    color: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--glass-border);
+    cursor: pointer;
+    z-index: 1004;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    font-size: 1.4rem;
+}
+
+.fab-btn-secondary:hover {
+    transform: scale(1.1) translateY(-3px);
+    box-shadow: var(--premium-shadow);
+    color: var(--accent);
+}
+
+.fab-btn-secondary::before {
+    content: 'Pratonton Laporan';
+    position: absolute;
+    right: 80px;
+    background: var(--primary);
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateX(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    color: var(--white);
+}
+
+.fab-btn-secondary:hover::before {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+@media (max-width: 768px) {
+    .fab-btn {
+        bottom: 100px;
+        /* Above our custom bottom nav */
+        right: 25px;
+        width: 60px;
+        height: 60px;
+    }
+
+    .fab-btn-secondary {
+        bottom: 175px;
+        right: 25px;
+        width: 55px;
+        height: 55px;
+    }
+
+    .fab-btn::before,
+    .fab-btn-secondary::before {
+        display: none;
+        /* Hide label on mobile */
+    }
+}
+
+/* Sidebar Weather Widget */
+.sidebar-weather {
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+}
+
+.sw-icon i {
+    font-size: 1.4rem;
+    color: #fbbf24;
+    filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.3));
+}
+
+.sw-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.sw-temp {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1;
+}
+
+.sw-city {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .sidebar-weather {
+        display: none;
+        /* Hide in mobile bottom nav to save space */
+    }
+}
+
+/* Report Edit Box Styling */
+.report-edit-box {
+    border: 1px solid #000 !important;
+    padding: 10px !important;
+    margin: 10px 0 !important;
+    min-height: 50px !important;
+    width: 250px !important;
+    resize: both !important;
+    overflow: auto !important;
+    display: inline-block !important;
+    vertical-align: top !important;
+    background: transparent !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+}
+
+.report-edit-box:hover {
+    background: rgba(59, 130, 246, 0.05) !important;
+    outline: 1px dashed #3b82f6 !important;
+}
+
+@media print {
+    .report-edit-box {
+        resize: none !important;
+        overflow: visible !important;
+        outline: none !important;
+        border: 1px solid #000 !important;
+    }
+}
+
+/* End of Style */
+
+/* Compact Workspace UI Enhancement */
+.report-preview-content {
+    max-width: 1400px !important;
+    height: 95vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+}
+
+.report-ribbon {
+    background: #fdfdfd !important;
+    border-bottom: 1px solid #e1e8ed !important;
+    flex-shrink: 0;
+}
+
+.ribbon-tabs {
+    background: #ffffff !important;
+    display: flex;
+    padding: 0 15px;
+    gap: 2px;
+    border-bottom: 1px solid #edf2f7;
+    height: 38px;
+    align-items: center;
+}
+
+.ribbon-tab {
+    padding: 8px 15px;
+    font-size: 13px !important;
+    font-weight: 500;
+    color: #4a5568 !important;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 6px 6px 0 0;
+}
+
+.ribbon-tab.active {
+    color: #3182ce !important;
+    background: #fdfdfd !important;
+    border: 1px solid #edf2f7;
+    border-bottom-color: #fdfdfd;
+    font-weight: 600;
+}
+
+.ribbon-content {
+    padding: 8px 15px;
+    height: 85px;
+    background: #fdfdfd;
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+}
+
+.toolbar-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    border-right: 1px solid #edf2f7;
+    padding: 0 10px;
+    height: 100%;
+}
+
+.toolbar-row {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.toolbar-label {
+    font-size: 10px !important;
+    color: #a0aec0 !important;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+.tool-btn {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 14px !important;
+    border: 1px solid transparent !important;
+    background: transparent !important;
+    border-radius: 4px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4a5568 !important;
+    transition: background 0.2s;
+}
+
+.tool-btn:hover {
+    background: #edf2f7 !important;
+    border-color: #cbd5e0 !important;
+    color: #2b6cb0 !important;
+}
+
+.report-editable-container {
+    flex-grow: 1 !important;
+    background: #cbd5e0 !important;
+    padding: 30px !important;
+    overflow-y: auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+}
+
+.report-page {
+    background: #ffffff !important;
+    box-shadow: 0 4px 50px rgba(0, 0, 0, 0.15) !important;
+    margin: 0 auto !important;
+    min-height: 297mm;
+    border: 1px solid #fff;
+}
+
+/* Ribbon Refinement */
+.toolbar-group {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    /* Push everything down */
+    padding: 2px 12px 5px 12px !important;
+}
+
+.toolbar-row {
+    display: flex !important;
+    gap: 6px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-bottom: 5px !important;
+    flex-grow: 1 !important;
+}
+
+.toolbar-label {
+    font-size: 9px !important;
+    color: #94a3b8 !important;
+    text-transform: uppercase !important;
+    font-weight: 800 !important;
+    margin-top: auto !important;
+    letter-spacing: 0.8px !important;
+    opacity: 0.8;
+}
+
+/* Final Interaction Fix */
+.report-page {
+    position: relative !important;
+    z-index: 5 !important;
+    pointer-events: auto !important;
+    cursor: text !important;
+}
+
+.report-editable-container {
+    pointer-events: auto !important;
+    z-index: 1 !important;
+}
+
+.report-ribbon {
+    position: relative;
+    z-index: 100 !important;
+}
+
+/* Remove Gray Background from Editor */
+.report-editable-container {
+    background: #ffffff !important;
+    padding: 20px !important;
+}
+
+/* Minimalist Focus Mode */
+#reportPreviewModal {
+    padding: 0 !important;
+    background: #ffffff !important;
+}
+
+#reportPreviewModal .report-preview-content {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.report-editable-container {
+    background: #ffffff !important;
+    padding: 0 !important;
+    flex-grow: 1 !important;
+}
+
+.report-page {
+    margin: 30px auto !important;
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.2) !important;
+    /* Extremely subtle border-only shadow */
+    border: 1px solid #eee !important;
+}
+
+/* Remove Page Border and Force Full Width */
+.report-page {
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 30mm !important;
+    /* Keep internal padding for A4 content safety */
+}
+
+/* Header and Page Spacing Reduction */
+.report-page {
+    padding-top: 5mm !important;
+    padding-bottom: 5mm !important;
+}
+
+.report-header {
+    margin-bottom: 10px !important;
+    padding-bottom: 5px !important;
+}
+
+.report-logo-placeholder {
+    margin-bottom: 5px !important;
+}
+
+/* Force Grand Total Right Alignment */
+.report-grand-total {
+    display: flex !important;
+    justify-content: flex-end !important;
+    width: 100% !important;
+    margin-top: 20px !important;
 }
