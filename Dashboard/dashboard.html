@@ -1506,34 +1506,44 @@
             const video = document.getElementById('qrVideo');
             const loading = document.getElementById('qrLoadingText');
             const status = document.getElementById('qrStatusText');
-            const overlay = document.getElementById('qrOverlay');
             
             if (status) status.textContent = "Mencari Kamera...";
             if (loading) loading.style.display = 'flex';
-            if (overlay) overlay.style.display = 'none';
             document.getElementById('qrResult').style.display = 'none';
 
+            // Debug alert 1: Function triggered
+            // alert("DEBUG: Mula startQrCamera");
+
             try {
-                // Simplified constraint for maximum compatibility
-                qrStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' }
-                });
+                const constraints = { video: { facingMode: 'environment' } };
                 
-                if (status) status.textContent = "Menyambung...";
+                // Debug alert 2: Asking for stream
+                if (status) status.textContent = "Meminta Izin Kamera...";
+                
+                qrStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // alert("DEBUG: Stream berjaya didapati");
+                if (status) status.textContent = "Stream Diterima!";
+                
                 video.srcObject = qrStream;
+                video.setAttribute('playsinline', 'true');
+                video.muted = true;
                 
                 video.onloadedmetadata = () => {
-                    if (status) status.textContent = "Memulakan...";
+                    if (status) status.textContent = "Metadata Sedia. Memulakan...";
                     video.play().then(() => {
-                        // Success! Hide loading and show scanner box
+                        // alert("DEBUG: Video sedang bermain!");
+                        if (status) status.textContent = "Kamera Aktif";
                         if (loading) loading.style.display = 'none';
-                        if (overlay) overlay.style.display = 'flex';
+                        if (document.getElementById('qrOverlay')) document.getElementById('qrOverlay').style.display = 'flex';
                         tickQrCamera();
                     }).catch(e => {
-                        if (status) status.textContent = "Ralat: " + e.message;
+                        // alert("DEBUG Ralat Play: " + e.message);
+                        if (status) status.textContent = "Ralat Play: " + e.message;
                     });
                 };
             } catch (err) {
+                // alert("DEBUG Ralat Utama: " + err.message);
                 if (status) status.textContent = "Gagal: " + err.message;
                 showNotification('❌ Kamera gagal: ' + err.message, 'warning');
             }
