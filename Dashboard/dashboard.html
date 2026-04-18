@@ -1515,13 +1515,21 @@
             const loading = document.getElementById('qrLoadingText');
             const overlay = document.getElementById('qrOverlay');
             
-            if (video) video.style.opacity = '0';
+            if (video) {
+                video.style.opacity = '0';
+                video.muted = true; // Crucial for mobile autoplay
+            }
             if (loading) loading.style.display = 'block';
             if (overlay) overlay.style.display = 'none';
             document.getElementById('qrResult').style.display = 'none';
+
+            if (typeof jsQR === 'undefined') {
+                showNotification('❌ QR library tidak dijumpai. Hubungi admin.', 'warning');
+                return;
+            }
             
             const constraints = [
-                { video: { facingMode: 'environment' } }, // Simplified
+                { video: { facingMode: 'environment' } },
                 { video: true }
             ];
 
@@ -1530,15 +1538,36 @@
                 try {
                     qrStream = await navigator.mediaDevices.getUserMedia(constraint);
                     video.srcObject = qrStream;
+                    
+                    // Essential for mobile
                     video.setAttribute('playsinline', 'true');
+                    video.muted = true;
                     
-                    await video.play();
-                    
-                    if (loading) loading.style.display = 'none';
-                    if (video) video.style.opacity = '1';
-                    if (overlay) overlay.style.display = 'flex';
-                    
-                    tickQrCamera();
+                    // Use promise-based play() with fallback
+                    const playPromise = video.play();
+                    if (playPromise !== undefined) {
+                        try {
+                            await playPromise;
+                            if (loading) loading.style.display = 'none';
+                            video.style.opacity = '1';
+                            if (overlay) overlay.style.display = 'flex';
+                            tickQrCamera();
+                            return; 
+                        } catch (e) {
+                            console.warn("Play failed, waiting for user interaction or metadata:", e);
+                            video.onloadedmetadata = async () => {
+                                try {
+                                    await video.play();
+                                    if (loading) loading.style.display = 'none';
+                                    video.style.opacity = '1';
+                                    if (overlay) overlay.style.display = 'flex';
+                                    tickQrCamera();
+                                } catch (err2) {
+                                    showNotification("Klik skrin untuk mulakan kamera.", "info");
+                                }
+                            };
+                        }
+                    }
                     return; 
                 } catch (err) {
                     lastError = err;
@@ -1546,7 +1575,7 @@
             }
 
             if (lastError) {
-                showNotification('❌ Kamera tidak dapat diakses: ' + lastError.message, 'warning');
+                showNotification('❌ Kamera gagal: ' + lastError.message, 'warning');
                 qrSwitchTab('file');
             }
         }
