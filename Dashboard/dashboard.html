@@ -1399,11 +1399,15 @@
 
             <!-- Camera view -->
             <div id="qrCameraPanel">
-                <div style="position:relative;border-radius:12px;overflow:hidden;background:#000;">
+                <div style="position:relative;border-radius:12px;overflow:hidden;background:#000;min-height:260px;display:flex;align-items:center;justify-content:center;">
+                    <!-- Loading Text -->
+                    <div id="qrLoadingText" style="position:absolute;color:rgba(255,255,255,0.5);font-size:0.9rem;">
+                        <i class="fas fa-circle-notch fa-spin"></i> Memulakan kamera...
+                    </div>
                     <video id="qrVideo" autoplay playsinline muted
-                        style="width:100%;height:260px;object-fit:cover;display:block;"></video>
+                        style="width:100%;height:260px;object-fit:cover;display:block;opacity:0;transition:opacity 0.3s;"></video>
                     <!-- Scanning overlay -->
-                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+                    <div id="qrOverlay" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;pointer-events:none;">
                         <div style="
                             width:180px;height:180px;border:2px solid #3b82f6;border-radius:12px;
                             box-shadow:0 0 0 9999px rgba(0,0,0,0.4);position:relative;">
@@ -1507,21 +1511,35 @@
 
         async function startQrCamera() {
             stopQrCamera();
+            const video = document.getElementById('qrVideo');
+            const loading = document.getElementById('qrLoadingText');
+            const overlay = document.getElementById('qrOverlay');
+            
+            if (video) video.style.opacity = '0';
+            if (loading) loading.style.display = 'block';
+            if (overlay) overlay.style.display = 'none';
             document.getElementById('qrResult').style.display = 'none';
             
             const constraints = [
-                { video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } },
-                { video: true } // Fallback for laptops/PC without back camera
+                { video: { facingMode: 'environment' } }, // Simplified
+                { video: true }
             ];
 
             let lastError = null;
             for (const constraint of constraints) {
                 try {
                     qrStream = await navigator.mediaDevices.getUserMedia(constraint);
-                    const video = document.getElementById('qrVideo');
                     video.srcObject = qrStream;
-                    video.onloadedmetadata = () => { video.play(); tickQrCamera(); };
-                    return; // Success
+                    video.setAttribute('playsinline', 'true');
+                    
+                    await video.play();
+                    
+                    if (loading) loading.style.display = 'none';
+                    if (video) video.style.opacity = '1';
+                    if (overlay) overlay.style.display = 'flex';
+                    
+                    tickQrCamera();
+                    return; 
                 } catch (err) {
                     lastError = err;
                 }
