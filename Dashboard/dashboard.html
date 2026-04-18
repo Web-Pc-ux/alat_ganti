@@ -1399,15 +1399,30 @@
 
             <!-- Camera view -->
             <div id="qrCameraPanel">
-                <div style="position:relative;border-radius:12px;overflow:hidden;background:#000;min-height:260px;display:flex;align-items:center;justify-content:center;">
-                    <!-- Loading Text -->
-                    <div id="qrLoadingText" style="position:absolute;color:rgba(255,255,255,0.5);font-size:0.9rem;">
-                        <i class="fas fa-circle-notch fa-spin"></i> Memulakan kamera...
-                    </div>
+                <div style="position:relative; width:100%; height:280px; background:#000; border-radius:12px; overflow:hidden;">
+                    <!-- The Video Stream -->
                     <video id="qrVideo" autoplay playsinline muted
-                        style="width:100%; height:100%; min-height:260px; object-fit:cover; display:block; background:#000;"></video>
-                    <!-- Scanning overlay -->
-                    <div id="qrOverlay" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+                        style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0; z-index:1;"></video>
+                    
+                    <!-- Loading/Status -->
+                    <div id="qrLoadingText" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; z-index:5; background:#000;">
+                         <div style="text-align:center;">
+                            <i class="fas fa-circle-notch fa-spin" style="font-size:1.5rem; margin-bottom:10px;"></i>
+                            <div id="qrStatusText">Menunggu Kamera...</div>
+                         </div>
+                    </div>
+
+                    <!-- Scanner Overlay (The Box) -->
+                    <div id="qrOverlay" style="position:absolute; inset:0; z-index:10; pointer-events:none; border: 2px solid rgba(255,255,255,0.1); display:none; align-items:center; justify-content:center;">
+                        <div style="width:200px; height:200px; border:2px solid #3b82f6; border-radius:20px; box-shadow: 0 0 0 1000px rgba(0,0,0,0.5); position:relative;">
+                             <div style="position:absolute; top:0; left:0; right:0; height:2px; background:#3b82f6; animation: qrScanAnim 2s infinite;"></div>
+                        </div>
+                    </div>
+                </div>
+                <p style="color:#94a3b8; font-size:0.8rem; text-align:center; margin:12px 0 0;">
+                    Arahkan kamera ke kod QR/Barcode
+                </p>
+            </div>
                         <div style="
                             width:180px;height:180px;border:2px solid #3b82f6;border-radius:12px;
                             box-shadow:0 0 0 9999px rgba(0,0,0,0.4);position:relative;">
@@ -1513,29 +1528,37 @@
             stopQrCamera();
             const video = document.getElementById('qrVideo');
             const loading = document.getElementById('qrLoadingText');
+            const status = document.getElementById('qrStatusText');
+            const overlay = document.getElementById('qrOverlay');
             
-            if (loading) loading.style.display = 'block';
+            if (status) status.textContent = "Mencari Kamera...";
+            if (loading) loading.style.display = 'flex';
+            if (overlay) overlay.style.display = 'none';
             document.getElementById('qrResult').style.display = 'none';
 
-            if (typeof jsQR === 'undefined') {
-                showNotification('❌ QR library error.', 'warning');
-                return;
-            }
-            
             try {
+                // Simplified constraint for maximum compatibility
                 qrStream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: 'environment' }
                 });
+                
+                if (status) status.textContent = "Menyambung...";
                 video.srcObject = qrStream;
+                
                 video.onloadedmetadata = () => {
-                    video.play();
-                    if (loading) loading.style.display = 'none';
-                    tickQrCamera();
+                    if (status) status.textContent = "Memulakan...";
+                    video.play().then(() => {
+                        // Success! Hide loading and show scanner box
+                        if (loading) loading.style.display = 'none';
+                        if (overlay) overlay.style.display = 'flex';
+                        tickQrCamera();
+                    }).catch(e => {
+                        if (status) status.textContent = "Ralat: " + e.message;
+                    });
                 };
             } catch (err) {
-                console.error("Camera error:", err);
+                if (status) status.textContent = "Gagal: " + err.message;
                 showNotification('❌ Kamera gagal: ' + err.message, 'warning');
-                qrSwitchTab('file');
             }
         }
 
