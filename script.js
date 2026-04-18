@@ -2109,7 +2109,7 @@ async function turboSync(action, sheet, data) {
 
 async function turboLoadAll() {
     if (!GS_URL) return;
-    showNotification('🔄 Menghubungkan ke Turbo Engine...', 'info');
+    // showNotification('🔄 Menghubungkan ke Turbo Engine...', 'info');
 
     try {
         // Gunakan mode cors dan redirect follow untuk Google Apps Script
@@ -2167,9 +2167,9 @@ async function turboLoadAll() {
             displayJuruteknikTable();
             updateJuruteknikDropdowns();
 
-            showNotification('✅ Data diselaraskan dengan Cloud Turbo.', 'success');
+            // showNotification('✅ Data diselaraskan dengan Cloud Turbo.', 'success');
         } else {
-            showNotification('⚠️ Cloud: ' + (result.message || 'Ralat tidak diketahui'), 'warning');
+            // showNotification('⚠️ Cloud: ' + (result.message || 'Ralat tidak diketahui'), 'warning');
         }
     } catch (err) {
         console.error('TurboLoad Failure:', err);
@@ -3457,9 +3457,61 @@ function getIcon(desc) {
     return '<i class="fas fa-cloud-sun"></i>';
 }
 
+// Make Weather Widget Draggable
+function makeDraggable(element) {
+    if (!element) return;
+    
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    
+    element.onmousedown = dragMouseDown;
+
+    function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // get the mouse cursor position at startup:
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        // call a function whenever the cursor moves:
+        document.onmousemove = elementDrag;
+        
+        // Disable floating animation while dragging
+        element.style.animation = 'none';
+    }
+
+    function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // calculate the new cursor position:
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        // set the element's new position:
+        element.style.top = (element.offsetTop - pos2) + "px";
+        element.style.left = (element.offsetLeft - pos1) + "px";
+        element.style.right = 'auto'; // Remove fixed right position
+    }
+
+    function closeDragElement() {
+        // stop moving when mouse button is released:
+        document.onmouseup = null;
+        document.onmousemove = null;
+        
+        // Re-enable floating animation
+        element.style.animation = 'floatingWeather 3s ease-in-out infinite';
+    }
+}
+
 // Call init weather on load
-document.addEventListener('DOMContentLoaded', initWeather);
+document.addEventListener('DOMContentLoaded', () => {
+    initWeather();
+    const weatherWidget = document.getElementById('weatherWidget');
+    if (weatherWidget) makeDraggable(weatherWidget);
+});
 // Immediate call for login page in case DOMContentLoaded already fired or for faster response
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
     initWeather();
+    const weatherWidget = document.getElementById('weatherWidget');
+    if (weatherWidget) makeDraggable(weatherWidget);
 }

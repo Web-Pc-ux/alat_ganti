@@ -239,6 +239,9 @@ body {
     margin-left: var(--sidebar-w);
     padding: 40px;
     transition: all 0.4s ease;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 /* Sticky Header in Main Area */
@@ -2096,24 +2099,32 @@ textarea:focus {
 
 @media (max-width: 768px) {
     .fab-btn {
-        bottom: 100px;
-        /* Above our custom bottom nav */
-        right: 25px;
-        width: 60px;
-        height: 60px;
+        bottom: 95px; /* Safely above mobile nav bar */
+        right: 20px;
+        width: 58px;
+        height: 58px;
+        box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
     }
 
     .fab-btn-secondary {
-        bottom: 175px;
-        right: 25px;
-        width: 55px;
-        height: 55px;
+        bottom: 165px; /* Clear vertical spacing above the primary plus button */
+        right: 20px;
+        width: 58px;
+        height: 58px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
     }
 
     .fab-btn::before,
     .fab-btn-secondary::before {
         display: none;
         /* Hide label on mobile */
+    }
+    
+    /* Ensure content doesn't get hidden behind FABs */
+    .section {
+        padding-bottom: 180px !important;
     }
 }
 
@@ -2423,4 +2434,15 @@ textarea:focus {
     justify-content: flex-end !important;
     width: 100% !important;
     margin-top: 20px !important;
+}
+
+/* Footer Styling */
+.footer {
+    margin-top: auto;
+    padding-top: 40px;
+    padding-bottom: 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    width: 100%;
 }

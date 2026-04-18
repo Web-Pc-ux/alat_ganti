@@ -100,7 +100,7 @@
             <main class="main-content">
                 <!-- Dashboard Section -->
                 <section id="dashboard" class="section">
-                    <h2>DASHBOARD PERMOHONAN USER</h2> <!-- Dashboard yang Connected ke Form Permohonan ---->
+                    <h2>STATISTIK PERMOHONAN USER</h2> <!-- Dashboard yang Connected ke Form Permohonan ---->
 
                     <!-- Ringkasan Statistik -->
                     <div class="stats-grid">
@@ -1039,7 +1039,8 @@
 
         <!-- Modal for Editable Report Preview dalam permhonan user-->
         <div id="reportPreviewModal" class="modal">
-            <div class="modal-content report-preview-content" style="max-width: 1400px; width: 95%; height: 95vh; display: flex; flex-direction: column;">
+            <div class="modal-content report-preview-content"
+                style="max-width: 1400px; width: 95%; height: 95vh; display: flex; flex-direction: column;">
                 <div class="modal-header">
                     <h2>🛠️ Edit & Pratonton Laporan</h2>
                     <button class="modal-close" id="closeReportPreview">&times;</button>
@@ -1110,27 +1111,36 @@
                         <div id="tab-insert" class="ribbon-panel">
                             <div class="toolbar-group">
                                 <div class="toolbar-row">
-                                    <button class="btn btn-small btn-secondary tool-btn" onclick="addReportRow()" title="Tambah Baris"><i class="fas fa-plus-square"></i></button>
-                                    <button class="btn btn-small btn-secondary tool-btn" onclick="addReportColumn()" title="Tambah Lajur"><i class="fas fa-columns"></i></button>
-                                    <button class="btn btn-small btn-secondary tool-btn" onclick="deleteReportRow()" title="Padam Baris" style="color:var(--danger)"><i class="fas fa-trash-alt"></i></button>
+                                    <button class="btn btn-small btn-secondary tool-btn" onclick="addReportRow()"
+                                        title="Tambah Baris"><i class="fas fa-plus-square"></i></button>
+                                    <button class="btn btn-small btn-secondary tool-btn" onclick="addReportColumn()"
+                                        title="Tambah Lajur"><i class="fas fa-columns"></i></button>
+                                    <button class="btn btn-small btn-secondary tool-btn" onclick="deleteReportRow()"
+                                        title="Padam Baris" style="color:var(--danger)"><i
+                                            class="fas fa-trash-alt"></i></button>
                                 </div>
                                 <span class="toolbar-label">Jadual</span>
                             </div>
                             <div class="toolbar-divider"></div>
                             <div class="toolbar-group">
                                 <div class="toolbar-row">
-                                    <label for="reportLogoInput" class="btn btn-small btn-secondary" style="height:32px; padding:0 10px; display:flex; align-items:center; gap:5px; cursor:pointer;" title="Muat naik logo">
+                                    <label for="reportLogoInput" class="btn btn-small btn-secondary"
+                                        style="height:32px; padding:0 10px; display:flex; align-items:center; gap:5px; cursor:pointer;"
+                                        title="Muat naik logo">
                                         <i class="fas fa-image"></i> Logo
                                     </label>
                                     <input type="file" id="reportLogoInput" accept="image/*" style="display:none;">
-                                    <input type="range" id="logoWidthSlider" min="10" max="500" value="150" style="width:80px;" title="Saiz Logo">
+                                    <input type="range" id="logoWidthSlider" min="10" max="500" value="150"
+                                        style="width:80px;" title="Saiz Logo">
                                 </div>
                                 <span class="toolbar-label">Ilustrasi</span>
                             </div>
                             <div class="toolbar-divider"></div>
                             <div class="toolbar-group">
                                 <div class="toolbar-row">
-                                    <button class="btn btn-small btn-secondary" onclick="insertReportBox()" style="height:32px; padding:0 10px; display:flex; align-items:center; gap:5px;" title="Tambah Kotak Teks">
+                                    <button class="btn btn-small btn-secondary" onclick="insertReportBox()"
+                                        style="height:32px; padding:0 10px; display:flex; align-items:center; gap:5px;"
+                                        title="Tambah Kotak Teks">
                                         <i class="fas fa-paragraph"></i> Edit Box
                                     </button>
                                 </div>
@@ -1142,15 +1152,20 @@
                         <div id="tab-layout" class="ribbon-panel">
                             <div class="toolbar-group">
                                 <div class="toolbar-row">
-                                    <button class="btn btn-small btn-secondary tool-btn" onclick="setReportOrientation('portrait')" title="Portrait"><i class="fas fa-file"></i></button>
-                                    <button class="btn btn-small btn-secondary tool-btn" onclick="setReportOrientation('landscape')" title="Landscape"><i class="fas fa-file-invoice" style="transform:rotate(90deg)"></i></button>
+                                    <button class="btn btn-small btn-secondary tool-btn"
+                                        onclick="setReportOrientation('portrait')" title="Portrait"><i
+                                            class="fas fa-file"></i></button>
+                                    <button class="btn btn-small btn-secondary tool-btn"
+                                        onclick="setReportOrientation('landscape')" title="Landscape"><i
+                                            class="fas fa-file-invoice" style="transform:rotate(90deg)"></i></button>
                                 </div>
                                 <span class="toolbar-label">Halaman</span>
                             </div>
                             <div class="toolbar-divider"></div>
                             <div class="toolbar-group">
                                 <div class="toolbar-row">
-                                    <select class="toolbar-select" onchange="setReportMargins(this.value)" style="width:110px;">
+                                    <select class="toolbar-select" onchange="setReportMargins(this.value)"
+                                        style="width:110px;">
                                         <option value="20mm">20mm (Normal)</option>
                                         <option value="10mm">10mm (Sempit)</option>
                                         <option value="0mm">0mm (Tiada)</option>
@@ -1161,12 +1176,14 @@
                             <div class="toolbar-divider"></div>
                             <div class="toolbar-group">
                                 <div class="toolbar-row">
-                                    <select id="lineHeightSelect" class="toolbar-select" onchange="updateLineHeight(this.value)" style="width:60px;">
+                                    <select id="lineHeightSelect" class="toolbar-select"
+                                        onchange="updateLineHeight(this.value)" style="width:60px;">
                                         <option value="1">1.0</option>
                                         <option value="1.2" selected>1.2</option>
                                         <option value="1.5">1.5</option>
                                     </select>
-                                    <button class="btn btn-small btn-secondary tool-btn" onclick="toggleReportGrid()" title="Grid"><i class="fas fa-th"></i></button>
+                                    <button class="btn btn-small btn-secondary tool-btn" onclick="toggleReportGrid()"
+                                        title="Grid"><i class="fas fa-th"></i></button>
                                 </div>
                                 <span class="toolbar-label">Format</span>
                             </div>

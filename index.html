@@ -18,6 +18,7 @@
   <!-- Loader Futuristik -->
   <div id="loadingOverlay">
     <span class="loader"></span>
+    <div class="loading-text" id="loaderText">Sila Tunggu...</div>
   </div>
 
   <!-- Weather Widget Premium -->
@@ -75,25 +76,30 @@
     const loginForm = document.getElementById('loginForm');
     const loadingOverlay = document.getElementById('loadingOverlay');
 
-    function showLoader() { if (loadingOverlay) loadingOverlay.style.display = 'flex'; }
+    const loaderText = document.getElementById('loaderText');
+
+    function showLoader(text = "Sila Tunggu...") { 
+      if (loadingOverlay) loadingOverlay.style.display = 'flex'; 
+      if (loaderText) loaderText.textContent = text;
+    }
     function hideLoader() { if (loadingOverlay) loadingOverlay.style.display = 'none'; }
 
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      showLoader();
+      showLoader("Mengesahkan ID...");
 
       const email = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value.trim();
 
       try {
-        // Login user
         const userCred = await signInWithEmailAndPassword(auth, email, password);
         const uid = userCred.user.uid;
 
         // Ambil role & name dari Firestore
         const snap = await getDoc(doc(db, "users", uid));
         if (!snap.exists()) {
-          alert("❌ Role tidak dijumpai di Firestore!");
+          hideLoader();
+          showPremiumToast("❌ Akaun anda tidak didaftarkan. Sila hubungi Admin.", "error");
           return;
         }
 
@@ -108,16 +114,41 @@
           name: userData.name
         }));
 
-        alert(`✅ Selamat datang, ${userData.name}`);
-        window.location.href = "Dashboard/dashboard.html";
+        showLoader("Menyediakan Dashboard...");
+        showPremiumToast(`✅ Selamat datang, ${userData.name}`);
+
+        setTimeout(() => {
+          window.location.href = "Dashboard/dashboard.html";
+        }, 1800);
 
       } catch (err) {
         console.error("Login error:", err);
-        alert("❌ Email / password salah");
-      } finally {
         hideLoader();
+        showPremiumToast("❌ Email atau password salah. Belum daftar? Sila hubungi Admin.", "error");
       }
     });
+
+    function showPremiumToast(message, type = "success") {
+      const toast = document.createElement('div');
+      toast.className = 'premium-toast';
+      const icon = type === "success" ? "fa-check-circle" : "fa-exclamation-circle";
+      const iconColor = type === "success" ? "#10b981" : "#ef4444";
+      
+      toast.innerHTML = `
+        <i class="fas ${icon}" style="color: ${iconColor}"></i>
+        <span style="font-weight: 500;">${message}</span>
+      `;
+      document.body.appendChild(toast);
+      
+      // Trigger entrance
+      setTimeout(() => toast.classList.add('show'), 10);
+      
+      // Remove after delay
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 500);
+      }, 3000);
+    }
   </script>
 
 

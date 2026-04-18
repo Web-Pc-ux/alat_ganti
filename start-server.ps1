@@ -6,7 +6,7 @@ Run: .\start-server.ps1
 
 $cfgPath = Join-Path (Get-Location) 'config.json'
 if (Test-Path $cfgPath) {
-    $cfg = Get-Content $cfgPath -Raw | ConvertFrom-Json
+    $cfg  = Get-Content $cfgPath -Raw | ConvertFrom-Json
     $port = [int]($cfg.port)
 } else {
     $port = 8000
@@ -22,7 +22,7 @@ function Get-MimeType {
         '.js'   { 'application/javascript' }
         '.json' { 'application/json' }
         '.png'  { 'image/png' }
-        '.jpg' { 'image/jpeg' }
+        '.jpg'  { 'image/jpeg' }
         '.jpeg' { 'image/jpeg' }
         '.gif'  { 'image/gif' }
         '.svg'  { 'image/svg+xml' }
@@ -31,57 +31,70 @@ function Get-MimeType {
     }
 }
 
-Write-Host "Starting static server for $(Get-Location) on port $port" -ForegroundColor Green
-
+# ── Find available port (localhost only) ───────────────────────────────────────
 $listener = $null
-$maxTry = 50
-$found = $false
+$maxTry   = 50
+$found    = $false
+
 for ($p = $port; $p -le ($port + $maxTry); $p++) {
     $testListener = New-Object System.Net.HttpListener
-    $prefix = "http://localhost:$p/"
     try {
-        $testListener.Prefixes.Add($prefix)
+        $testListener.Prefixes.Add([string]::Format('http://localhost:{0}/', $p))
         $testListener.Start()
         $listener = $testListener
-        $port = $p
-        $found = $true
+        $port     = $p
+        $found    = $true
         break
     } catch {
         try { $testListener.Close() } catch {}
     }
 }
+
 if (-not $found) {
-    Write-Host "Failed to start listener on ports $port through $($port + $maxTry). Maybe permission or port in use." -ForegroundColor Red
-    throw
+    Write-Host 'FATAL: Gagal memulakan server pada semua port yang dicuba.' -ForegroundColor Red
+    Read-Host  'Tekan Enter untuk keluar'
+    exit 1
 }
 
-Write-Host "Server running - open http://localhost:$port/" -ForegroundColor Cyan
+# ── Status ─────────────────────────────────────────────────────────────────────
+Write-Host ''
+Write-Host '================================================' -ForegroundColor Cyan
+Write-Host '  SERVER BERJALAN ✅' -ForegroundColor Green
+Write-Host "  URL  : http://localhost:$port/" -ForegroundColor Yellow
+Write-Host "  Folder : $(Get-Location)" -ForegroundColor Gray
+Write-Host '  Tekan Ctrl+C untuk henti.' -ForegroundColor Gray
+Write-Host '================================================' -ForegroundColor Cyan
+Write-Host ''
+
+# ── Request loop ───────────────────────────────────────────────────────────────
 while ($listener.IsListening) {
     try {
-        $context = $listener.GetContext()
-        $request = $context.Request
+        $context  = $listener.GetContext()
+        $request  = $context.Request
         $response = $context.Response
-        Write-Host "Request: $($request.HttpMethod) $($request.Url.AbsolutePath)" -ForegroundColor White
 
         $urlPath = $request.Url.AbsolutePath
         if ([string]::IsNullOrEmpty($urlPath) -or $urlPath -eq '/') { $urlPath = '/index.html' }
 
         $localPath = Join-Path (Get-Location) ($urlPath.TrimStart('/'))
+
         if (Test-Path $localPath) {
             $bytes = [System.IO.File]::ReadAllBytes($localPath)
-            $response.ContentType = Get-MimeType $localPath
+            $response.ContentType     = Get-MimeType $localPath
             $response.ContentLength64 = $bytes.Length
             $response.OutputStream.Write($bytes, 0, $bytes.Length)
-            $response.OutputStream.Close()
+            Write-Host "  200  $urlPath" -ForegroundColor DarkGray
         } else {
             $response.StatusCode = 404
-            $msg = "404 - Not Found"
-            $buffer = [System.Text.Encoding]::UTF8.GetBytes($msg)
-            $response.OutputStream.Write($buffer,0,$buffer.Length)
-            $response.OutputStream.Close()
+            $buffer = [System.Text.Encoding]::UTF8.GetBytes('404 - Not Found')
+            $response.OutputStream.Write($buffer, 0, $buffer.Length)
+            Write-Host "  404  $urlPath" -ForegroundColor DarkRed
         }
+        $response.OutputStream.Close()
     } catch {
-        Write-Host "Request handling error: $_" -ForegroundColor Yellow
+        if ($listener.IsListening) {
+            Write-Host "  ERR  $_" -ForegroundColor Yellow
+        }
     }
 }
 
