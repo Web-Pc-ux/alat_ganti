@@ -100,7 +100,18 @@
             <main class="main-content">
                 <!-- Dashboard Section -->
                 <section id="dashboard" class="section">
-                    <h2>STATISTIK PERMOHONAN USER</h2> <!-- Dashboard yang Connected ke Form Permohonan ---->
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                        <div>
+                            <h2>STATISTIK PERMOHONAN USER</h2>
+                            <p style="color:#7f8c8d;margin-bottom:0;">Ringkasan status permohonan alat ganti terkini.</p>
+                        </div>
+                        <div class="action-buttons-top">
+                            <button class="fab-btn" id="dashOpenRequestForm" title="Tambah Permohonan Baru" onclick="document.getElementById('openRequestForm')?.click()">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
 
                     <!-- Ringkasan Statistik -->
                     <div class="stats-grid">
@@ -877,27 +888,28 @@
                         </div>
                     </div>
 
-                    <div class="table-responsive">
-                        <table class="inventory-table" id="stockReportTable">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Model Komputer</th>
-                                    <th>Alat Ganti</th>
-                                    <th>Jumlah Stok</th>
-                                    <th>Penggunaan</th>
-                                    <th>Baki</th>
-                                    <th>Peratus Penggunaan</th>
-                                </tr>
-                            </thead>
-                            <tbody id="stockReportBody">
-                                <tr class="empty-row">
-                                    <td colspan="7" class="text-center">Tiada data laporan. Klik "Jana Laporan" untuk
-                                        menjana.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <div id="groupedStockReport"></div>
+
+                    <!-- Hidden table untuk print sahaja -->
+                    <table class="inventory-table" id="stockReportTable" style="display:none;">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Syarikat</th>
+                                <th>Model Komputer</th>
+                                <th>Alat Ganti</th>
+                                <th>Jumlah Stok</th>
+                                <th>Penggunaan</th>
+                                <th>Baki</th>
+                                <th>Peratus Penggunaan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockReportBody">
+                            <tr class="empty-row">
+                                <td colspan="8" class="text-center">Tiada data laporan. Klik "Jana Laporan" untuk menjana.</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </section>
                 <!-- Juruteknik Section -->
                 <section id="juruteknikSection" class="section">
@@ -1340,7 +1352,6 @@
                                 }
                             } else {
                                 console.error("Ralat menambah pengguna:", error);
-                                alert("Gagal! " + error.message);
                             }
                         } finally {
                             const submitBtn = addUserForm.querySelector('button[type="submit"]');
@@ -1352,15 +1363,254 @@
                 loadUsers();
             </script>
 
+    <!-- QR Scanner Modal -->
+    <div id="qrScanModal" style="
+        display:none;position:fixed;inset:0;z-index:99999;
+        background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);
+        justify-content:center;align-items:center;">
+        <div style="
+            background:#1e293b;border-radius:20px;padding:28px;
+            width:min(420px,94vw);box-shadow:0 30px 80px rgba(0,0,0,0.6);
+            border:1px solid rgba(255,255,255,0.1);">
 
+            <!-- Header -->
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h3 style="color:#fff;margin:0;font-size:1.1rem;">
+                    <i class="fas fa-qrcode" style="color:#3b82f6;margin-right:8px;"></i>Scan QR / Barcode
+                </h3>
+                <button id="qrCloseBtn" style="
+                    background:rgba(255,255,255,0.1);border:none;color:#fff;
+                    width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;">✕</button>
+            </div>
 
+            <!-- Tab buttons -->
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+                <button id="qrTabCamera" onclick="qrSwitchTab('camera')" style="
+                    flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:600;
+                    background:#3b82f6;color:#fff;transition:all 0.2s;">
+                    <i class="fas fa-camera"></i> Kamera
+                </button>
+                <button id="qrTabFile" onclick="qrSwitchTab('file')" style="
+                    flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:600;
+                    background:rgba(255,255,255,0.1);color:#94a3b8;transition:all 0.2s;">
+                    <i class="fas fa-image"></i> Dari Fail
+                </button>
+            </div>
 
-        </div> <!-- End main-content-wrapper -->
-    </div> <!-- End app-layout -->
+            <!-- Camera view -->
+            <div id="qrCameraPanel">
+                <div style="position:relative;border-radius:12px;overflow:hidden;background:#000;">
+                    <video id="qrVideo" autoplay playsinline muted
+                        style="width:100%;height:260px;object-fit:cover;display:block;"></video>
+                    <!-- Scanning overlay -->
+                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+                        <div style="
+                            width:180px;height:180px;border:2px solid #3b82f6;border-radius:12px;
+                            box-shadow:0 0 0 9999px rgba(0,0,0,0.4);position:relative;">
+                            <div id="qrScanLine" style="
+                                position:absolute;left:0;right:0;height:2px;
+                                background:linear-gradient(90deg,transparent,#3b82f6,transparent);
+                                animation:qrScan 1.5s ease-in-out infinite;top:0;"></div>
+                            <!-- Corners -->
+                            <span style="position:absolute;top:-2px;left:-2px;width:20px;height:20px;border-top:4px solid #3b82f6;border-left:4px solid #3b82f6;border-radius:4px 0 0 0;"></span>
+                            <span style="position:absolute;top:-2px;right:-2px;width:20px;height:20px;border-top:4px solid #3b82f6;border-right:4px solid #3b82f6;border-radius:0 4px 0 0;"></span>
+                            <span style="position:absolute;bottom:-2px;left:-2px;width:20px;height:20px;border-bottom:4px solid #3b82f6;border-left:4px solid #3b82f6;border-radius:0 0 0 4px;"></span>
+                            <span style="position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-bottom:4px solid #3b82f6;border-right:4px solid #3b82f6;border-radius:0 0 4px 0;"></span>
+                        </div>
+                    </div>
+                </div>
+                <p style="color:#64748b;font-size:0.82rem;text-align:center;margin:10px 0 0;">
+                    Arahkan QR/Barcode ke kotak di atas
+                </p>
+            </div>
 
+            <!-- File view -->
+            <div id="qrFilePanel" style="display:none;">
+                <label for="qrFileInput" style="
+                    display:flex;flex-direction:column;align-items:center;justify-content:center;
+                    border:2px dashed rgba(59,130,246,0.4);border-radius:12px;padding:30px;
+                    cursor:pointer;color:#94a3b8;gap:10px;transition:all 0.2s;min-height:160px;">
+                    <i class="fas fa-cloud-upload-alt" style="font-size:2.5rem;color:#3b82f6;"></i>
+                    <span style="font-weight:600;">Klik untuk pilih gambar QR</span>
+                    <span style="font-size:0.78rem;">JPG, PNG, GIF, WebP</span>
+                </label>
+                <input type="file" id="qrFileInput" accept="image/*" style="display:none;">
+                <canvas id="qrCanvas" style="display:none;"></canvas>
+            </div>
+
+            <!-- Result -->
+            <div id="qrResult" style="
+                display:none;margin-top:14px;padding:12px 16px;
+                background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);
+                border-radius:10px;color:#10b981;font-weight:600;font-size:0.92rem;">
+                <i class="fas fa-check-circle" style="margin-right:6px;"></i>
+                <span id="qrResultText"></span>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes qrScan {
+            0%   { top: 0%; }
+            50%  { top: calc(100% - 2px); }
+            100% { top: 0%; }
+        }
+        @media (max-width: 768px) {
+            #fabTambahPermohonan { bottom: 20px; right: 20px; width: 52px; height: 52px; font-size: 1.3rem; }
+        }
+
+        /* Scan QR Button - Mobile Only */
+        @media (min-width: 1025px) {
+            #scanQRBtn {
+                display: none !important;
+            }
+        }
+    </style>
+
+    <!-- FAB Tambah Permohonan -->
+    <button id="fabTambahPermohonan" title="Tambah Permohonan Baru">
+        <span class="fab-label">Tambah Permohonan</span>
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- jsQR library -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="../script.js" defer></script>
     <!-- SheetJS for .xlsx import -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        // FAB → buka modal permohonan
+        document.getElementById('fabTambahPermohonan').addEventListener('click', function () {
+            const btn = document.getElementById('openRequestForm');
+            if (btn) btn.click();
+            else {
+                const modal = document.getElementById('requestModal');
+                if (modal) modal.style.display = 'flex';
+            }
+        });
+
+        // ── QR Scanner Logic ────────────────────────────────────────────────────
+        let qrStream = null;
+        let qrAnimFrame = null;
+        let qrTargetInput = null;
+
+        function qrSwitchTab(tab) {
+            const isCamera = tab === 'camera';
+            document.getElementById('qrCameraPanel').style.display = isCamera ? 'block' : 'none';
+            document.getElementById('qrFilePanel').style.display   = isCamera ? 'none'  : 'block';
+            document.getElementById('qrTabCamera').style.background = isCamera ? '#3b82f6' : 'rgba(255,255,255,0.1)';
+            document.getElementById('qrTabCamera').style.color      = isCamera ? '#fff'    : '#94a3b8';
+            document.getElementById('qrTabFile').style.background   = isCamera ? 'rgba(255,255,255,0.1)' : '#3b82f6';
+            document.getElementById('qrTabFile').style.color        = isCamera ? '#94a3b8' : '#fff';
+            if (isCamera) startQrCamera(); else stopQrCamera();
+        }
+
+        async function startQrCamera() {
+            stopQrCamera();
+            document.getElementById('qrResult').style.display = 'none';
+            
+            const constraints = [
+                { video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } },
+                { video: true } // Fallback for laptops/PC without back camera
+            ];
+
+            let lastError = null;
+            for (const constraint of constraints) {
+                try {
+                    qrStream = await navigator.mediaDevices.getUserMedia(constraint);
+                    const video = document.getElementById('qrVideo');
+                    video.srcObject = qrStream;
+                    video.onloadedmetadata = () => { video.play(); tickQrCamera(); };
+                    return; // Success
+                } catch (err) {
+                    lastError = err;
+                }
+            }
+
+            if (lastError) {
+                showNotification('❌ Kamera tidak dapat diakses: ' + lastError.message, 'warning');
+                qrSwitchTab('file');
+            }
+        }
+
+        function tickQrCamera() {
+            const video  = document.getElementById('qrVideo');
+            const canvas = document.createElement('canvas');
+            canvas.width  = video.videoWidth  || 320;
+            canvas.height = video.videoHeight || 240;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: 'dontInvert'
+            });
+            if (code) {
+                qrOnFound(code.data);
+                return;
+            }
+            qrAnimFrame = requestAnimationFrame(tickQrCamera);
+        }
+
+        function stopQrCamera() {
+            if (qrStream) { qrStream.getTracks().forEach(t => t.stop()); qrStream = null; }
+            if (qrAnimFrame) { cancelAnimationFrame(qrAnimFrame); qrAnimFrame = null; }
+        }
+
+        function qrOnFound(text) {
+            stopQrCamera();
+            // Fill target input
+            if (qrTargetInput) qrTargetInput.value = text;
+            // Show result
+            document.getElementById('qrResultText').textContent = text;
+            document.getElementById('qrResult').style.display = 'block';
+            showNotification('✅ QR Berjaya Dibaca: ' + text, 'success');
+            // Auto close after 1.5s
+            setTimeout(() => closeQrModal(), 1500);
+        }
+
+        function closeQrModal() {
+            stopQrCamera();
+            document.getElementById('qrScanModal').style.display = 'none';
+            document.getElementById('qrResult').style.display = 'none';
+        }
+
+        // File scan
+        document.getElementById('qrFileInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.getElementById('qrCanvas');
+                canvas.width  = img.width;
+                canvas.height = img.height;
+                canvas.getContext('2d').drawImage(img, 0, 0);
+                const imageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: 'attemptBoth'
+                });
+                if (code) {
+                    qrOnFound(code.data);
+                } else {
+                    showNotification('⚠️ QR tidak dapat dibaca dari gambar ini.', 'warning');
+                }
+            };
+            img.src = URL.createObjectURL(file);
+            this.value = ''; // reset input
+        });
+
+        // Open QR modal (called from scanQRBtn)
+        window.openQrScanner = function (targetInputId) {
+            qrTargetInput = targetInputId ? document.getElementById(targetInputId) : document.getElementById('recvSiri');
+            document.getElementById('qrScanModal').style.display = 'flex';
+            document.getElementById('qrResult').style.display = 'none';
+            qrSwitchTab('camera');
+        };
+
+        document.getElementById('qrCloseBtn').addEventListener('click', closeQrModal);
+        document.getElementById('qrScanModal').addEventListener('click', function (e) {
+            if (e.target === this) closeQrModal();
+        });
+    </script>
 </body>
 
 </html>

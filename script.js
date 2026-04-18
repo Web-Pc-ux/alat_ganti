@@ -1855,13 +1855,15 @@ function setupPenerimaanListeners() {
 
     form.addEventListener('submit', handleAddReceivedEquipment);
 
-    // QR Scan Placeholder
+    // QR Scan - buka modal scanner sebenar
     const scanBtn = document.getElementById('scanQRBtn');
     if (scanBtn) {
         scanBtn.addEventListener('click', () => {
-            const simulatedQR = "QR-" + Math.random().toString(36).substr(2, 9).toUpperCase();
-            document.getElementById('recvSiri').value = simulatedQR;
-            showNotification('ðŸ“· QR Scanned: ' + simulatedQR, 'info');
+            if (typeof window.openQrScanner === 'function') {
+                window.openQrScanner('recvSiri');
+            } else {
+                showNotification('⚠️ Scanner tidak tersedia.', 'warning');
+            }
         });
     }
 
@@ -2028,10 +2030,24 @@ window.editReceived = function (id) {
 
 window.deleteReceived = function (id) {
     showDeleteConfirmation('Adakah anda pasti mahu memadam rekod penerimaan ini?', async () => {
+        // 1. Buang dari array local dahulu
         receivedItems = receivedItems.filter(i => i.id != id);
-        await turboSync('delete', 'penerimaan', { id: id });
+
+        // 2. Simpan ke localStorage SEGERA supaya refresh tidak pulihkan semula
+        saveDataToStorage();
+
+        // 3. Kemaskini UI
         displayReceivedTable();
         updateDashboard();
+
+        // 4. Cuba sync ke cloud (no-cors, fire-and-forget)
+        try {
+            await turboSync('delete', 'penerimaan', { id: id });
+        } catch (err) {
+            console.warn('TurboSync delete gagal (akan cuba semula bila online):', err);
+        }
+
+        showNotification('🗑️ Rekod penerimaan telah dipadam.', 'success');
     });
 };
 
@@ -2624,106 +2640,191 @@ function setupConfirmationModalListeners() {
 // ==========================================
 
 function generateStockReport() {
+    const container = document.getElementById('groupedStockReport');
     const reportBody = document.getElementById('stockReportBody');
-    if (!reportBody) return;
+    if (!container) return;
 
-    // Clear existing rows
-    reportBody.innerHTML = '';
+    container.innerHTML = '';
+    if (reportBody) reportBody.innerHTML = '';
 
-    // Group equipment by model and category
-    const stockData = {};
+    // ── Build stock data grouped by syarikat ──────────────────────────────────
+    const byVendor = {};
 
     equipment.forEach(item => {
+        const vendor = item.syarikat || 'Tanpa Syarikat/Vendor';
+        if (!byVendor[vendor]) byVendor[vendor] = {};
         const key = `${item.komp1}|${item.category}`;
-        if (!stockData[key]) {
-            stockData[key] = {
+        if (!byVendor[vendor][key]) {
+            byVendor[vendor][key] = {
                 model: item.komp1,
                 category: item.category,
                 totalStock: 0,
                 usage: 0
             };
         }
-        stockData[key].totalStock += item.quantity || 0;
+        byVendor[vendor][key].totalStock += item.quantity || 0;
     });
 
-    // Calculate usage from requests - match by "catat" field (Alat Ganti Dipohon)
-    // and use Requestitem quantity for accurate usage tracking
+    // Calculate usage from requests
     requests.forEach(req => {
-        // pastikan ada item dan model
         if (req.Requestitem && req.model && req.status !== 'Ditolak') {
-            Object.keys(stockData).forEach(key => {
-                const [model, category] = key.split('|');
-
-                const reqItemLower = req.Requestitem.toLowerCase().trim();
-                const categoryLower = category.toLowerCase().trim();
-                const reqModelLower = req.model.toLowerCase().trim();
-                const modelLower = model.toLowerCase().trim();
-
-                // Match item + model komputer, hanya kira yang tidak ditolak
-                if (reqItemLower === categoryLower && reqModelLower === modelLower) {
-                    stockData[key].usage += 1; // tambah 1 setiap permohonan
-                }
+            Object.values(byVendor).forEach(vendorData => {
+                Object.keys(vendorData).forEach(key => {
+                    const entry = vendorData[key];
+                    if (req.Requestitem.toLowerCase().trim() === entry.category.toLowerCase().trim() &&
+                        req.model.toLowerCase().trim() === entry.model.toLowerCase().trim()) {
+                        entry.usage += 1;
+                    }
+                });
             });
         }
     });
 
+    const vendorNames = Object.keys(byVendor).sort();
 
-
-
-    // Convert to array and sort
-    const reportData = Object.values(stockData).sort((a, b) => {
-        if (a.model !== b.model) return a.model.localeCompare(b.model);
-        return a.category.localeCompare(b.category);
-    });
-
-    if (reportData.length === 0) {
-        reportBody.innerHTML = '<tr class="empty-row"><td colspan="7" class="text-center">Tiada data untuk dipaparkan.</td></tr>';
+    if (vendorNames.length === 0) {
+        container.innerHTML = `<div style="text-align:center;padding:40px;color:#7f8c8d;">Tiada data. Klik "Jana Laporan" untuk menjana.</div>`;
         document.getElementById('stockSummaryCards').style.display = 'none';
         return;
     }
 
-    // Calculate summary statistics
-    let totalItems = reportData.length;
-    let criticalStock = 0;
-    let healthyStock = 0;
+    // ── Summary counts ────────────────────────────────────────────────────────
+    let totalItems = 0, criticalStock = 0, healthyStock = 0, printRowNum = 1;
 
-    // Generate table rows
-    reportData.forEach((item, index) => {
-        const balance = item.totalStock - item.usage;
-        const usagePercent = item.totalStock > 0 ? ((item.usage / item.totalStock) * 100).toFixed(1) : 0;
+    // ── Render accordion groups ───────────────────────────────────────────────
+    vendorNames.forEach((vendor, vIdx) => {
+        const items = Object.values(byVendor[vendor]).sort((a, b) => {
+            if (a.model !== b.model) return a.model.localeCompare(b.model);
+            return a.category.localeCompare(b.category);
+        });
 
-        // Count stock health
-        if (usagePercent > 80) criticalStock++;
-        else if (usagePercent < 50) healthyStock++;
+        // Vendor-level totals
+        let vendorTotal = 0, vendorUsed = 0;
+        items.forEach(i => { vendorTotal += i.totalStock; vendorUsed += i.usage; });
+        const vendorBalance = vendorTotal - vendorUsed;
+        totalItems += items.length;
 
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${item.model}</td>
-            <td>${item.category}</td>
-            <td>${item.totalStock}</td>
-            <td>${item.usage}</td>
-            <td>${balance}</td>
-            <td>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="flex: 1; background: #e0e0e0; border-radius: 10px; height: 20px; overflow: hidden;">
-                        <div style="width: ${usagePercent}%; background: ${usagePercent > 80 ? '#e74c3c' : usagePercent > 50 ? '#f39c12' : '#27ae60'}; height: 100%;"></div>
+        const syarikatObj = syarikatList.find(s => s.namaSyarikat === vendor);
+        const vendorId = syarikatObj ? syarikatObj.umsbenID : '';
+        const panelId = `stock-panel-${vIdx}`;
+
+        // ── Group header ──────────────────────────────────────────────────────
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'stock-group';
+        groupDiv.style.cssText = 'margin-bottom:12px;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
+
+        groupDiv.innerHTML = `
+            <div class="stock-group-header" id="hdr-${panelId}"
+                style="display:flex;justify-content:space-between;align-items:center;
+                       background:linear-gradient(135deg,#1e293b,#334155);
+                       color:#fff;padding:16px 20px;cursor:pointer;
+                       transition:background 0.2s;"
+                onclick="toggleStockGroup('${panelId}')">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <i class="fas fa-building" style="font-size:1.1rem;opacity:0.8;"></i>
+                    <div>
+                        <div style="font-weight:700;font-size:1rem;">${vendor}</div>
+                        <div style="font-size:0.78rem;opacity:0.65;">${vendorId ? vendorId + ' · ' : ''}${items.length} item alat ganti</div>
                     </div>
-                    <span style="min-width: 50px; text-align: right;">${usagePercent}%</span>
                 </div>
-            </td>
+                <div style="display:flex;align-items:center;gap:20px;font-size:0.85rem;">
+                    <div style="text-align:center;">
+                        <div style="opacity:0.65;font-size:0.72rem;">STOK</div>
+                        <div style="font-weight:700;">${vendorTotal}</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="opacity:0.65;font-size:0.72rem;">GUNA</div>
+                        <div style="font-weight:700;">${vendorUsed}</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="opacity:0.65;font-size:0.72rem;">BAKI</div>
+                        <div style="font-weight:700;">${vendorBalance}</div>
+                    </div>
+                    <i class="fas fa-chevron-down" id="icon-${panelId}"
+                        style="transition:transform 0.3s;font-size:0.85rem;"></i>
+                </div>
+            </div>
+            <div id="${panelId}" class="stock-group-body"
+                style="max-height:0;overflow:hidden;transition:max-height 0.4s ease;background:#fff;">
+                <div class="table-responsive" style="margin:0;">
+                    <table class="inventory-table" style="border-radius:0;margin:0;">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Model</th>
+                                <th>Alat Ganti</th>
+                                <th>Stok</th>
+                                <th>Guna</th>
+                                <th>Baki</th>
+                                <th>Penggunaan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${items.map((item, idx) => {
+                                const bal = item.totalStock - item.usage;
+                                const pct = item.totalStock > 0 ? ((item.usage / item.totalStock) * 100).toFixed(1) : 0;
+                                if (pct > 80) criticalStock++;
+                                else if (pct < 50) healthyStock++;
+                                const barColor = pct > 80 ? '#e74c3c' : pct > 50 ? '#f39c12' : '#27ae60';
+
+                                // Add to print table
+                                if (reportBody) {
+                                    const tr = document.createElement('tr');
+                                    tr.innerHTML = `<td>${printRowNum++}</td><td>${vendor}</td><td>${item.model}</td><td>${item.category}</td><td>${item.totalStock}</td><td>${item.usage}</td><td>${bal}</td><td>${pct}%</td>`;
+                                    reportBody.appendChild(tr);
+                                }
+
+                                return `<tr>
+                                    <td>${idx + 1}</td>
+                                    <td>${item.model}</td>
+                                    <td><strong>${item.category}</strong></td>
+                                    <td>${item.totalStock}</td>
+                                    <td>${item.usage}</td>
+                                    <td>${bal}</td>
+                                    <td>
+                                        <div style="display:flex;align-items:center;gap:8px;">
+                                            <div style="flex:1;background:#e0e0e0;border-radius:10px;height:16px;overflow:hidden;">
+                                                <div style="width:${pct}%;background:${barColor};height:100%;transition:width 0.5s;"></div>
+                                            </div>
+                                            <span style="min-width:42px;font-size:0.82rem;font-weight:600;">${pct}%</span>
+                                        </div>
+                                    </td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         `;
-        reportBody.appendChild(row);
+
+        container.appendChild(groupDiv);
     });
 
-    // Update summary cards
+    // ── Summary cards ─────────────────────────────────────────────────────────
     document.getElementById('totalItemsCount').textContent = totalItems;
     document.getElementById('criticalStockCount').textContent = criticalStock;
     document.getElementById('healthyStockCount').textContent = healthyStock;
     document.getElementById('stockSummaryCards').style.display = 'grid';
 
-    showNotification('✓ Laporan stok berjaya dijana!', 'success');
+    showNotification('✅ Laporan stok berjaya dijana!', 'success');
 }
+
+// Toggle accordion group
+window.toggleStockGroup = function (panelId) {
+    const panel = document.getElementById(panelId);
+    const icon  = document.getElementById('icon-' + panelId);
+    if (!panel) return;
+    const isOpen = panel.style.maxHeight && panel.style.maxHeight !== '0px';
+    // Close all first
+    document.querySelectorAll('.stock-group-body').forEach(p => { p.style.maxHeight = '0px'; });
+    document.querySelectorAll('[id^="icon-stock-panel-"]').forEach(i => { i.style.transform = ''; });
+    // Toggle clicked
+    if (!isOpen) {
+        panel.style.maxHeight = panel.scrollHeight + 'px';
+        if (icon) icon.style.transform = 'rotate(180deg)';
+    }
+};
+
 
 function printStockReport() {
     const reportTable = document.getElementById('stockReportTable');
