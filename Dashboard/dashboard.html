@@ -1511,39 +1511,42 @@
             if (loading) loading.style.display = 'flex';
             document.getElementById('qrResult').style.display = 'none';
 
-            // Debug alert 1: Function triggered
-            // alert("DEBUG: Mula startQrCamera");
-
             try {
-                const constraints = { video: { facingMode: 'environment' } };
+                const constraints = { 
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                };
                 
-                // Debug alert 2: Asking for stream
-                if (status) status.textContent = "Meminta Izin Kamera...";
-                
+                if (status) status.textContent = "Meminta Izin...";
                 qrStream = await navigator.mediaDevices.getUserMedia(constraints);
                 
-                // alert("DEBUG: Stream berjaya didapati");
-                if (status) status.textContent = "Stream Diterima!";
-                
+                if (status) status.textContent = "Menyambung Video...";
                 video.srcObject = qrStream;
+                
+                // Samsung/Chrome Mobile Optimizations
                 video.setAttribute('playsinline', 'true');
+                video.setAttribute('autoplay', 'true');
+                video.setAttribute('muted', 'true');
                 video.muted = true;
                 
-                video.onloadedmetadata = () => {
-                    if (status) status.textContent = "Metadata Sedia. Memulakan...";
-                    video.play().then(() => {
-                        // alert("DEBUG: Video sedang bermain!");
-                        if (status) status.textContent = "Kamera Aktif";
+                // Try to play immediately as per Gemini's suggestion
+                video.play().then(() => {
+                    if (status) status.textContent = "Kamera Aktif";
+                    if (loading) loading.style.display = 'none';
+                    if (document.getElementById('qrOverlay')) document.getElementById('qrOverlay').style.display = 'flex';
+                    tickQrCamera();
+                }).catch(e => {
+                    if (status) status.textContent = "Klik untuk Main: " + e.message;
+                    // Fallback: wait for metadata if immediate play fails
+                    video.onloadedmetadata = () => video.play().then(() => {
                         if (loading) loading.style.display = 'none';
-                        if (document.getElementById('qrOverlay')) document.getElementById('qrOverlay').style.display = 'flex';
                         tickQrCamera();
-                    }).catch(e => {
-                        // alert("DEBUG Ralat Play: " + e.message);
-                        if (status) status.textContent = "Ralat Play: " + e.message;
                     });
-                };
+                });
             } catch (err) {
-                // alert("DEBUG Ralat Utama: " + err.message);
                 if (status) status.textContent = "Gagal: " + err.message;
                 showNotification('❌ Kamera gagal: ' + err.message, 'warning');
             }
@@ -1616,6 +1619,8 @@
 
         // Open QR modal (called from scanQRBtn)
         window.openQrScanner = function (targetInputId) {
+            if (window.showDebug) window.showDebug(); // Auto-open debug panel
+            console.log("Membuka Scanner...");
             qrTargetInput = targetInputId ? document.getElementById(targetInputId) : document.getElementById('recvSiri');
             document.getElementById('qrScanModal').style.display = 'flex';
             document.getElementById('qrResult').style.display = 'none';
@@ -1627,6 +1632,39 @@
             if (e.target === this) closeQrModal();
         });
     </script>
-</body>
+    <!-- Mobile Debug Console (Optional for debugging) -->
+    <div id="mobileDebug" style="position:fixed; bottom:0; left:0; right:0; height:150px; background:rgba(0,0,0,0.9); color:#0f0; font-family:monospace; font-size:10px; overflow-y:auto; z-index:100000; border-top:1px solid #333; display:none; padding:10px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px; border-bottom:1px solid #444; padding-bottom:5px;">
+            <span>MOBILE DEBUG CONSOLE</span>
+            <button onclick="document.getElementById('mobileDebug').style.display='none'" style="background:none; border:none; color:#f00; cursor:pointer;">CLOSE</button>
+        </div>
+        <div id="debugLog"></div>
+    </div>
 
+    <script>
+        // Intercept console messages
+        (function() {
+            const logDiv = document.getElementById('debugLog');
+            const debugPanel = document.getElementById('mobileDebug');
+            const oldLog = console.log;
+            const oldErr = console.error;
+            const oldWarn = console.warn;
+
+            function addToLog(msg, type) {
+                const span = document.createElement('div');
+                span.style.color = type === 'error' ? '#ff4d4d' : (type === 'warn' ? '#ffcc00' : '#00ff00');
+                span.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+                logDiv.appendChild(span);
+                debugPanel.scrollTop = debugPanel.scrollHeight;
+            }
+
+            console.log = (...args) => { addToLog(args.join(' '), 'log'); oldLog.apply(console, args); };
+            console.error = (...args) => { addToLog(args.join(' '), 'error'); oldErr.apply(console, args); };
+            console.warn = (...args) => { addToLog(args.join(' '), 'warn'); oldWarn.apply(console, args); };
+            
+            // Auto open debug if camera starts
+            window.showDebug = () => debugPanel.style.display = 'block';
+        })();
+    </script>
+</body>
 </html>
